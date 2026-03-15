@@ -12,6 +12,7 @@ const Bookings = () => {
   const { data: bookings, loading, error } = useSheetData(SHEET_NAMES.bookings);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('newest');
 
   const statuses = useMemo(() => {
     const unique = new Set();
@@ -26,7 +27,7 @@ const Bookings = () => {
   const filteredBookings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return bookings.filter((booking) => {
+    const filtered = bookings.filter((booking) => {
       const matchesStatus =
         statusFilter === 'all' || booking.status?.toLowerCase() === statusFilter.toLowerCase();
 
@@ -40,7 +41,17 @@ const Bookings = () => {
 
       return matchesStatus && matchesQuery;
     });
-  }, [bookings, query, statusFilter]);
+
+    const toTimestamp = (value) => {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+    };
+
+    return filtered.sort((a, b) => {
+      const diff = toTimestamp(a.created_at) - toTimestamp(b.created_at);
+      return sortOrder === 'oldest' ? diff : -diff;
+    });
+  }, [bookings, query, statusFilter, sortOrder]);
 
   const { page, totalPages, setPage, paginatedItems } = usePagination(filteredBookings, 10);
 
@@ -82,6 +93,26 @@ const Bookings = () => {
                 {toTitleCase(status)}
               </option>
             ))}
+          </select>
+          <svg
+            className="pointer-events-none absolute right-3 h-4 w-4 text-gray-400"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="relative flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-black/50 px-3 text-sm text-gray-300">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400">Sort</span>
+          <select
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+            className="appearance-none bg-transparent pr-6 text-sm font-medium text-white focus:outline-none"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
           </select>
           <svg
             className="pointer-events-none absolute right-3 h-4 w-4 text-gray-400"
