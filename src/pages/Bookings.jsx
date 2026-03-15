@@ -12,7 +12,7 @@ const Bookings = () => {
   const { data: bookings, loading, error } = useSheetData(SHEET_NAMES.bookings);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState('newest');
+  const [sortOrder, setSortOrder] = useState('oldest');
 
   const statuses = useMemo(() => {
     const unique = new Set();
@@ -42,15 +42,7 @@ const Bookings = () => {
       return matchesStatus && matchesQuery;
     });
 
-    const toTimestamp = (value) => {
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-    };
-
-    return filtered.sort((a, b) => {
-      const diff = toTimestamp(a.created_at) - toTimestamp(b.created_at);
-      return sortOrder === 'oldest' ? diff : -diff;
-    });
+    return sortOrder === 'newest' ? filtered.slice().reverse() : filtered;
   }, [bookings, query, statusFilter, sortOrder]);
 
   const { page, totalPages, setPage, paginatedItems } = usePagination(filteredBookings, 10);
@@ -111,8 +103,8 @@ const Bookings = () => {
             onChange={(event) => setSortOrder(event.target.value)}
             className="appearance-none bg-transparent pr-6 text-sm font-medium text-white focus:outline-none"
           >
-            <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
+            <option value="newest">Newest</option>
           </select>
           <svg
             className="pointer-events-none absolute right-3 h-4 w-4 text-gray-400"

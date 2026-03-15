@@ -22,9 +22,7 @@ const Overview = () => {
     return Number.isNaN(date.getTime()) ? 0 : date.getTime();
   };
 
-  const latestBookings = [...bookings]
-    .sort((a, b) => toTimestamp(b.created_at) - toTimestamp(a.created_at))
-    .slice(0, 5);
+  const latestBookings = bookings.slice(-5).reverse();
 
   return (
     <div className="space-y-6">
