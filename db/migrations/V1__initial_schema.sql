@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS public.test_flyway_table (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

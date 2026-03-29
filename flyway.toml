@@ -1,0 +1,4 @@
+[flyway]
+locations = ["filesystem:./db/migrations"]
+defaultSchema = "public"
+environment = "uat"
