@@ -12,7 +12,7 @@ const Bookings = () => {
   const { data: bookings, loading, error } = useSheetData(SHEET_NAMES.bookings);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState('oldest');
+  const [sortOrder, setSortOrder] = useState('newest');
 
   const statuses = useMemo(() => {
     const unique = new Set();
