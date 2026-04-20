@@ -335,7 +335,7 @@ const Signup = () => {
                 </div>
 
                 {apiError ? (
-                  <p className="text-sm text-red-400">
+                  <p className="text-center text-sm text-red-400">
                     {apiError}
                     {shouldShowLoginLink(apiError) ? (
                       <>
@@ -392,7 +392,9 @@ const Signup = () => {
                       <div className="grid gap-0 md:grid-cols-[1.2fr_1fr]">
                         <div className="space-y-4 p-5">
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className="text-xl font-semibold uppercase tracking-[0.06em]">{plan.name}</h3>
+                            <h3 className="text-xl font-semibold uppercase tracking-[0.06em]">
+                              {plan.name}
+                            </h3>
                             {isProPlan ? (
                               <span className="rounded-full bg-amber-500/20 px-2 py-1 text-[11px] font-semibold text-amber-300">
                                 Popular
@@ -466,7 +468,7 @@ const Signup = () => {
                   </p>
                 ) : null}
 
-                {apiError ? <p className="text-sm text-red-400">{apiError}</p> : null}
+                {apiError ? <p className="text-center text-sm text-red-400">{apiError}</p> : null}
 
                 <button
                   type="button"
@@ -496,13 +498,13 @@ const Signup = () => {
 
       {showConfirm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
             <h2 className="font-display text-xl font-semibold text-white">Confirm Your Details</h2>
-            <p className="mt-2 text-sm text-gray-300">
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-300">
               Please confirm your details are correct before proceeding. Once submitted, your
               account will be created.
             </p>
-            <div className="mt-7 flex items-center justify-end gap-3">
+            <div className="mt-10 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
@@ -533,11 +535,14 @@ const Signup = () => {
 
       {showCheckoutConfirm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
             <h2 className="font-display text-xl font-semibold text-white">Confirm Plan Selection</h2>
-            <p className="mt-2 text-sm text-gray-300">
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-300">
               You have selected{' '}
-              <span className="font-semibold text-white">{selectedPlan?.name || 'a plan'}</span> with{' '}
+              <span className="font-semibold text-white">
+                {selectedPlan?.name ? `${selectedPlan.name} Plan` : 'a plan'}
+              </span>{' '}
+              with{' '}
               <span className="font-semibold capitalize text-white">{billingInterval}</span> billing at{' '}
               <span className="font-semibold text-white">
                 {formatMoney(
@@ -548,7 +553,7 @@ const Signup = () => {
               . Setup fee is{' '}
               <span className="font-semibold text-white">{formatMoney(selectedPlan?.setup_fee)}</span> one-time.
             </p>
-            <div className="mt-7 flex items-center justify-end gap-3">
+            <div className="mt-10 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowCheckoutConfirm(false)}

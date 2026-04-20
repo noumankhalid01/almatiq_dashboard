@@ -141,7 +141,7 @@ const Login = () => {
               </label>
             </div>
 
-            {apiError ? <p className="text-sm text-red-400">{apiError}</p> : null}
+            {apiError ? <p className="text-center text-sm text-red-400">{apiError}</p> : null}
 
             <button
               type="submit"

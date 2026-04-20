@@ -26,6 +26,17 @@ body {
     radial-gradient(420px 420px at 88% 78%, rgba(255, 255, 255, 0.06), transparent 64%);
 }
 
+.dashboard-font {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue',
+    'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.dashboard-font .font-display,
+.dashboard-font .font-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue',
+    'Segoe UI', Roboto, Arial, sans-serif;
+}
+
 #root {
   min-height: 100vh;
 }

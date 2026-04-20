@@ -32,7 +32,7 @@ const AppRoutes = () => {
   }
 
   return (
-    <div className="kaira-surface relative min-h-screen font-body text-white">
+    <div className="kaira-surface dashboard-font relative min-h-screen font-body text-white">
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-8 right-8 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
       <Sidebar />

@@ -1,6 +1,4 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import almatiqLogo from '../assets/almatiq_logo2.jpg';
-import poweredByLogo from '../assets/powered_by.png';
 import kosLogo from '../assets/KOS.png';
 
 const navItems = [
@@ -48,7 +46,7 @@ const Sidebar = () => {
     <aside className="fixed left-0 top-0 z-20 h-screen w-64">
       <div className="flex h-full flex-col gap-6 border-r border-white/10 bg-black p-6 text-white shadow-card">
         <div className="flex flex-col items-start gap-2">
-          <img src={almatiqLogo} alt="Almatiq" className="h-9 w-auto object-contain" />
+          <img src={kosLogo} alt="KairaOS" className="h-9 w-auto object-contain" />
           <p className="text-xs text-gray-400">Operations Dashboard</p>
         </div>
 
@@ -77,20 +75,20 @@ const Sidebar = () => {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:border-white/25 hover:bg-white/10"
+            className="group flex w-full items-center rounded-xl border border-white/15 bg-white/[0.03] px-4 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <path d="M16 17l5-5-5-5" />
-              <path d="M21 12H9" />
-            </svg>
-            <span>Logout</span>
+            <span className="flex items-center gap-3">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/5 text-gray-300 transition group-hover:bg-white/10 group-hover:text-white">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+              </span>
+              <span>Logout</span>
+            </span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <img src={poweredByLogo} alt="Powered by" className="h-2 w-auto object-contain opacity-80" />
-            <img src={kosLogo} alt="KOS" className="h-3 w-auto object-contain" />
-          </div>
         </div>
       </div>
     </aside>
