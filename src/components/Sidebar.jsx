@@ -75,10 +75,10 @@ const Sidebar = () => {
           <button
             type="button"
             onClick={handleLogout}
-            className="group flex w-full items-center rounded-xl border border-white/15 bg-white/[0.03] px-4 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+            className="group flex w-full items-center rounded-xl border border-red-400/35 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-100 transition hover:border-red-300/60 hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/40"
           >
             <span className="flex items-center gap-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/5 text-gray-300 transition group-hover:bg-white/10 group-hover:text-white">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-red-500/20 text-red-200 transition group-hover:bg-red-500/30 group-hover:text-red-100">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <path d="M16 17l5-5-5-5" />
