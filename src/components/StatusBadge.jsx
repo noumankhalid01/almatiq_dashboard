@@ -4,10 +4,12 @@ const statusStyles = {
   accepted: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   confirmed: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   completed: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  succeeded: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
   pending: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   new: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   cancelled: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
   canceled: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+  failed: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
   default: 'bg-white/10 text-gray-200 border-white/15'
 };
 
