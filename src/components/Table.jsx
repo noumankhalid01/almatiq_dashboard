@@ -2,11 +2,11 @@ const Table = ({ columns, rows, renderCell, rowKey, emptyMessage = 'No data avai
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-soft">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+        <table className="min-w-full text-sm">
           <thead className="border-b border-white/10 bg-black/40 text-xs uppercase tracking-[0.18em] text-gray-400">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={`px-5 py-4 font-medium ${column.className || ''}`}>
+                <th key={column.key} className={`px-5 py-4 text-center font-medium ${column.className || ''}`}>
                   {column.label}
                 </th>
               ))}
@@ -20,7 +20,7 @@ const Table = ({ columns, rows, renderCell, rowKey, emptyMessage = 'No data avai
                   className="text-gray-100 transition-colors hover:bg-white/5"
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className={`px-5 py-4 ${column.cellClassName || ''}`}>
+                    <td key={column.key} className={`px-5 py-4 text-center ${column.cellClassName || ''}`}>
                       {renderCell ? renderCell(row, column.key) : row[column.key] ?? '—'}
                     </td>
                   ))}

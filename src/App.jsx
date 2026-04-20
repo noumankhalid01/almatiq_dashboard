@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar.jsx';
 import Overview from './pages/Overview.jsx';
 import Bookings from './pages/Bookings.jsx';
 import Leads from './pages/Leads.jsx';
+import BillingHistory from './pages/BillingHistory.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 
@@ -16,7 +17,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login?session_expired=1" replace />} />
       </Routes>
     );
   }
@@ -42,6 +43,7 @@ const AppRoutes = () => {
             <Route path="/" element={<Overview />} />
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/leads" element={<Leads />} />
+            <Route path="/billing-history" element={<BillingHistory />} />
             <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="/signup" element={<Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />

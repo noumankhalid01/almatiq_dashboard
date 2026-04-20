@@ -1,3 +1,5 @@
+import { getAccessToken, refreshAccessToken } from '../utils/tokenUtils.js';
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 const toErrorMessage = (payload, fallback) => {
@@ -25,6 +27,55 @@ export const apiPost = async (path, body) => {
   });
 
   const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = new Error(toErrorMessage(payload, 'Something went wrong. Please try again.'));
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
+
+  return payload;
+};
+
+const isInvalidTokenError = (response, payload) =>
+  response.status === 401 &&
+  typeof payload?.detail === 'string' &&
+  payload.detail.toLowerCase() === 'invalid token';
+
+export const apiGet = async (path, { auth = false } = {}) => {
+  if (!API_BASE_URL) {
+    throw new Error('Missing VITE_API_BASE_URL in your .env file.');
+  }
+
+  const headers = {};
+  if (auth) {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('Missing access token. Please log in again.');
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const call = async (tokenOverride = '') => {
+    const requestHeaders = { ...headers };
+    if (auth && tokenOverride) {
+      requestHeaders.Authorization = `Bearer ${tokenOverride}`;
+    }
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'GET',
+      headers: requestHeaders
+    });
+    const payload = await response.json().catch(() => null);
+    return { response, payload };
+  };
+
+  let { response, payload } = await call();
+
+  if (auth && isInvalidTokenError(response, payload)) {
+    const freshAccessToken = await refreshAccessToken();
+    ({ response, payload } = await call(freshAccessToken));
+  }
 
   if (!response.ok) {
     const error = new Error(toErrorMessage(payload, 'Something went wrong. Please try again.'));

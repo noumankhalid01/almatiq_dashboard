@@ -17,16 +17,22 @@ const Login = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const checkoutSuccess = (params.get('checkout_success') || '').toLowerCase();
+    const sessionExpired = (params.get('session_expired') || '').toLowerCase();
     const shouldShow = ['1', 'true', 'yes'].includes(checkoutSuccess);
+    const shouldShowSessionExpired = ['1', 'true', 'yes'].includes(sessionExpired);
 
     setSuccessMessage(
       shouldShow ? 'Registration completed successfully. To continue, please log in.' : ''
+    );
+    setSessionExpiredMessage(
+      shouldShowSessionExpired ? 'Session expired, please login again.' : ''
     );
   }, [location.search]);
 
@@ -102,6 +108,12 @@ const Login = () => {
 
       <section className="relative flex min-h-screen w-full items-center justify-center px-5 pb-8 pt-28 sm:px-8 lg:px-10">
         <div className="w-full max-w-xl space-y-6">
+          {sessionExpiredMessage ? (
+            <div className="rounded-xl border border-red-300/60 bg-red-500/20 px-5 py-4 text-center shadow-[0_0_35px_-20px_rgba(248,113,113,0.95)]">
+              <p className="text-base font-semibold text-red-100">{sessionExpiredMessage}</p>
+            </div>
+          ) : null}
+
           {successMessage ? (
             <div className="rounded-xl border border-emerald-300/60 bg-emerald-500/20 px-5 py-4 text-center shadow-[0_0_35px_-20px_rgba(16,185,129,0.95)]">
               <p className="text-base font-semibold text-emerald-100">{successMessage}</p>
