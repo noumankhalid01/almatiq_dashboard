@@ -1,6 +1,9 @@
 import { getAccessToken, refreshAccessToken } from '../utils/tokenUtils.js';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
+const getNgrokBypassHeaders = () =>
+  IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {};
 
 const toErrorMessage = (payload, fallback) => {
   if (!payload) return fallback;
@@ -21,7 +24,8 @@ export const apiPost = async (path, body) => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...getNgrokBypassHeaders()
     },
     body: JSON.stringify(body)
   });
@@ -49,6 +53,7 @@ export const apiGet = async (path, { auth = false } = {}) => {
   }
 
   const headers = {};
+  Object.assign(headers, getNgrokBypassHeaders());
   if (auth) {
     const token = getAccessToken();
     if (!token) {

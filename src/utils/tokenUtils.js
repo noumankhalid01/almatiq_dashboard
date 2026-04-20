@@ -1,6 +1,7 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 const isInvalidTokenDetail = (payload) =>
   typeof payload?.detail === 'string' && payload.detail.toLowerCase() === 'invalid token';
+const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
 
 const parseAuth = () => {
   try {
@@ -50,7 +51,8 @@ export const refreshAccessToken = async () => {
   const response = await fetch(`${API_BASE_URL}/auth/refresh_token`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...(IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {})
     },
     body: JSON.stringify({ refresh_token: refreshToken })
   });
