@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import almatiqLogo from '../assets/almatiq_logo2.jpg';
 import poweredByLogo from '../assets/powered_by.png';
 import kosLogo from '../assets/KOS.png';
@@ -36,6 +36,14 @@ const navItems = [
 ];
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="fixed left-0 top-0 z-20 h-screen w-64">
       <div className="flex h-full flex-col gap-6 border-r border-white/10 bg-black p-6 text-white shadow-card">
@@ -65,9 +73,24 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        <div className="mt-auto flex items-center gap-2">
-          <img src={poweredByLogo} alt="Powered by" className="h-2 w-auto object-contain opacity-80" />
-          <img src={kosLogo} alt="KOS" className="h-3 w-auto object-contain" />
+        <div className="mt-auto space-y-4">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:border-white/25 hover:bg-white/10"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            <span>Logout</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <img src={poweredByLogo} alt="Powered by" className="h-2 w-auto object-contain opacity-80" />
+            <img src={kosLogo} alt="KOS" className="h-3 w-auto object-contain" />
+          </div>
         </div>
       </div>
     </aside>
