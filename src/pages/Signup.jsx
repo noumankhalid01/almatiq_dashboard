@@ -187,8 +187,10 @@ const Signup = () => {
         throw new Error('Stripe checkout URL was not returned by the server.');
       }
 
+      sessionStorage.setItem('checkout_in_progress', '1');
       window.location.href = response.checkout_url;
     } catch (error) {
+      sessionStorage.removeItem('checkout_in_progress');
       setApiError(error.message || 'Unable to start checkout. Please try again.');
       setStep(2);
       setLoading(false);

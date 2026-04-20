@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiPost } from '../services/apiClient.js';
 import { sanitizeEmail, sanitizeText } from '../utils/inputSanitizers.js';
 import { saveOnboardingData } from '../utils/onboardingStorage.js';
@@ -12,11 +12,49 @@ const createInitialForm = () => ({
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formValues, setFormValues] = useState(createInitialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [apiError, setApiError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const checkoutInProgress = sessionStorage.getItem('checkout_in_progress') === '1';
+    const hasSuccessSignal =
+      ['1', 'true', 'yes'].includes((params.get('checkout_success') || '').toLowerCase()) ||
+      (params.get('checkout') || '').toLowerCase() === 'success' ||
+      (params.get('redirect_status') || '').toLowerCase() === 'succeeded' ||
+      Boolean(params.get('session_id')) ||
+      Boolean(params.get('payment_intent'));
+    const hasCancelSignal =
+      ['1', 'true', 'yes'].includes((params.get('checkout_cancelled') || '').toLowerCase()) ||
+      (params.get('checkout') || '').toLowerCase() === 'cancel' ||
+      (params.get('checkout') || '').toLowerCase() === 'canceled' ||
+      (params.get('checkout') || '').toLowerCase() === 'cancelled';
+    const hasSeenMessage = sessionStorage.getItem('signup_success_message_seen') === '1';
+
+    if (hasCancelSignal) {
+      sessionStorage.removeItem('checkout_in_progress');
+      if (location.search) {
+        navigate(location.pathname, { replace: true });
+      }
+      return;
+    }
+
+    if (!hasSuccessSignal || hasSeenMessage) return;
+    if (!checkoutInProgress && !params.get('session_id') && !params.get('payment_intent')) return;
+
+    setSuccessMessage('Registration completed successfully. To continue, please log in.');
+    sessionStorage.setItem('signup_success_message_seen', '1');
+    sessionStorage.removeItem('checkout_in_progress');
+
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
 
   const setFieldValue = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
@@ -49,6 +87,8 @@ const Login = () => {
     try {
       const loginResponse = await apiPost('/auth/login', { email, password });
       localStorage.clear();
+      sessionStorage.removeItem('signup_success_message_seen');
+      sessionStorage.removeItem('checkout_in_progress');
       localStorage.setItem('auth', JSON.stringify(loginResponse));
       navigate('/', { replace: true });
     } catch (error) {
@@ -90,6 +130,12 @@ const Login = () => {
 
       <section className="relative flex min-h-screen w-full items-center justify-center px-5 pb-8 pt-28 sm:px-8 lg:px-10">
         <div className="w-full max-w-xl space-y-6">
+          {successMessage ? (
+            <div className="rounded-xl border border-emerald-300/60 bg-emerald-500/20 px-5 py-4 text-center shadow-[0_0_35px_-20px_rgba(16,185,129,0.95)]">
+              <p className="text-base font-semibold text-emerald-100">{successMessage}</p>
+            </div>
+          ) : null}
+
           <div className="space-y-2 text-center">
             <h1 className="font-display text-3xl font-semibold leading-tight">Welcome back</h1>
             <p className="text-sm text-gray-400">
