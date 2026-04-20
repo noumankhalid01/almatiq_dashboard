@@ -91,7 +91,7 @@ const Login = () => {
       <section className="relative flex min-h-screen w-full items-center justify-center px-5 pb-8 pt-28 sm:px-8 lg:px-10">
         <div className="w-full max-w-xl space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="font-display text-3xl font-semibold leading-tight">Access your workspace</h1>
+            <h1 className="font-display text-3xl font-semibold leading-tight">Welcome back</h1>
             <p className="text-sm text-gray-400">
               Login to manage bookings, leads, and your business operations.
             </p>
