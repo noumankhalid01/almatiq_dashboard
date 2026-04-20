@@ -17,11 +17,6 @@ const Overview = () => {
   const loading = bookingsLoading || leadsLoading;
   const error = bookingsError || leadsError;
 
-  const toTimestamp = (value) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-  };
-
   const latestBookings = bookings.slice(-5).reverse();
 
   return (

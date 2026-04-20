@@ -43,8 +43,8 @@ export default {
         card: '0 14px 40px -25px rgba(15, 23, 42, 0.45)'
       },
       fontFamily: {
-        display: ['"Sora"', 'ui-sans-serif', 'system-ui'],
-        body: ['"Inter"', 'ui-sans-serif', 'system-ui']
+        display: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui'],
+        body: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui']
       }
     }
   },
