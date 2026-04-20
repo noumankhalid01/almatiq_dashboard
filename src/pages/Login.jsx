@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiPost } from '../services/apiClient.js';
 import { sanitizeEmail, sanitizeText } from '../utils/inputSanitizers.js';
 import { saveOnboardingData } from '../utils/onboardingStorage.js';
@@ -12,11 +12,23 @@ const createInitialForm = () => ({
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formValues, setFormValues] = useState(createInitialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [apiError, setApiError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const checkoutSuccess = (params.get('checkout_success') || '').toLowerCase();
+    const shouldShow = ['1', 'true', 'yes'].includes(checkoutSuccess);
+
+    setSuccessMessage(
+      shouldShow ? 'Registration completed successfully. To continue, please log in.' : ''
+    );
+  }, [location.search]);
 
   const setFieldValue = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
@@ -90,6 +102,12 @@ const Login = () => {
 
       <section className="relative flex min-h-screen w-full items-center justify-center px-5 pb-8 pt-28 sm:px-8 lg:px-10">
         <div className="w-full max-w-xl space-y-6">
+          {successMessage ? (
+            <div className="rounded-xl border border-emerald-300/60 bg-emerald-500/20 px-5 py-4 text-center shadow-[0_0_35px_-20px_rgba(16,185,129,0.95)]">
+              <p className="text-base font-semibold text-emerald-100">{successMessage}</p>
+            </div>
+          ) : null}
+
           <div className="space-y-2 text-center">
             <h1 className="font-display text-3xl font-semibold leading-tight">Welcome back</h1>
             <p className="text-sm text-gray-400">
