@@ -142,7 +142,7 @@ const Login = () => {
                   value={formValues.email}
                   onChange={(event) => setFieldValue('email', sanitizeEmail(event.target.value))}
                   className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
-                  placeholder="you@business.com"
+                  placeholder="username@domain.com"
                 />
                 {fieldErrors.email ? <p className="text-xs text-red-400">{fieldErrors.email}</p> : null}
               </label>

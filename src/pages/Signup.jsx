@@ -32,6 +32,12 @@ const passwordIsStrong = (value) => {
   return true;
 };
 
+const normalizePhoneNumber = (value) => {
+  const compact = sanitizePhone(value).replace(/[\s()-]/g, '');
+  if (!compact) return '';
+  return compact.startsWith('+') ? compact : `+${compact}`;
+};
+
 const formatMoney = (value, suffix = '') => `$${Number(value || 0).toFixed(2)}${suffix}`;
 
 const shouldShowLoginLink = (message = '') =>
@@ -104,11 +110,12 @@ const Signup = () => {
 
   const validateStepOne = () => {
     const nextErrors = {};
+    const normalizedPhone = normalizePhoneNumber(formValues.phone);
 
     if (!formValues.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
       nextErrors.email = 'Enter a valid email address.';
     }
-    if (!formValues.phone || !isValidPhoneNumber(formValues.phone)) {
+    if (!normalizedPhone || !isValidPhoneNumber(normalizedPhone)) {
       nextErrors.phone = 'Enter a valid phone number.';
     }
     if (!passwordIsStrong(formValues.password)) {
@@ -136,7 +143,7 @@ const Signup = () => {
     try {
       const payload = {
         email: sanitizeEmail(formValues.email).trim(),
-        phone: sanitizePhone(formValues.phone).trim(),
+        phone: normalizePhoneNumber(formValues.phone),
         business_name: sanitizeText(formValues.business_name).trim(),
         industry: sanitizeText(formValues.industry).trim(),
         address: sanitizeText(formValues.address).trim(),
@@ -239,7 +246,7 @@ const Signup = () => {
                       value={formValues.email}
                       onChange={(event) => setFieldValue('email', sanitizeEmail(event.target.value))}
                       className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
-                      placeholder="you@business.com"
+                      placeholder="username@domain.com"
                     />
                     {fieldErrors.email ? <p className="text-xs text-red-400">{fieldErrors.email}</p> : null}
                   </label>
@@ -269,7 +276,7 @@ const Signup = () => {
                         setFieldValue('business_name', toTitleCaseLive(event.target.value))
                       }
                       className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
-                      placeholder="Acme Labs"
+                      placeholder="Almatiq"
                     />
                     {fieldErrors.business_name ? (
                       <p className="text-xs text-red-400">{fieldErrors.business_name}</p>

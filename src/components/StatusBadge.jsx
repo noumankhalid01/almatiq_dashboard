@@ -5,6 +5,7 @@ const statusStyles = {
   confirmed: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   completed: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
   succeeded: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  paid: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
   pending: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   new: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
   cancelled: 'bg-rose-500/20 text-rose-300 border-rose-500/40',

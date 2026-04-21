@@ -116,7 +116,7 @@ const BillingHistory = () => {
           { key: 'amount', label: 'Amount' },
           { key: 'payment_type', label: 'Payment Type' },
           { key: 'status', label: 'Status' },
-          { key: 'created_at', label: 'Created At' }
+          { key: 'created_at', label: 'Billed At' }
         ]}
         rows={paginatedItems}
         rowKey={(row) => row.id}
