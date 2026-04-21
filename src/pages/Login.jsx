@@ -28,6 +28,10 @@ const Login = () => {
     const shouldShow = ['1', 'true', 'yes'].includes(checkoutSuccess);
     const shouldShowSessionExpired = ['1', 'true', 'yes'].includes(sessionExpired);
 
+    if (shouldShow) {
+      sessionStorage.clear();
+    }
+
     setSuccessMessage(
       shouldShow ? 'Registration completed successfully. To continue, please log in.' : ''
     );
