@@ -4,6 +4,9 @@ import Overview from './pages/Overview.jsx';
 import Bookings from './pages/Bookings.jsx';
 import Leads from './pages/Leads.jsx';
 import BillingHistory from './pages/BillingHistory.jsx';
+import MyAccount from './pages/MyAccount.jsx';
+import Integrations from './pages/Integrations.jsx';
+import Kaira from './pages/Kaira.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 
@@ -44,6 +47,9 @@ const AppRoutes = () => {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/billing-history" element={<BillingHistory />} />
+            <Route path="/settings/my-account" element={<MyAccount />} />
+            <Route path="/settings/integrations" element={<Integrations />} />
+            <Route path="/settings/kaira" element={<Kaira />} />
             <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="/signup" element={<Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,7 +3,7 @@ const isInvalidTokenDetail = (payload) =>
   typeof payload?.detail === 'string' && payload.detail.toLowerCase() === 'invalid token';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
 
-const parseAuth = () => {
+export const parseAuth = () => {
   try {
     const raw = localStorage.getItem('auth');
     if (!raw) return null;
@@ -11,6 +11,11 @@ const parseAuth = () => {
   } catch {
     return null;
   }
+};
+
+export const saveAuth = (nextAuth) => {
+  if (!nextAuth) return;
+  localStorage.setItem('auth', JSON.stringify(nextAuth));
 };
 
 export const getAccessToken = () => {
@@ -35,7 +40,7 @@ export const setAccessToken = (accessToken) => {
     }
   };
 
-  localStorage.setItem('auth', JSON.stringify(nextAuth));
+  saveAuth(nextAuth);
 };
 
 export const refreshAccessToken = async () => {

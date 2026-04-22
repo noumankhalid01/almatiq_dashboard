@@ -1,5 +1,7 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import kosLogo from '../assets/KOS.png';
+import { parseAuth } from '../utils/tokenUtils.js';
 
 const navItems = [
   {
@@ -43,8 +45,25 @@ const navItems = [
   }
 ];
 
+const settingsItems = [
+  { label: 'My Account', to: '/settings/my-account' },
+  { label: 'Integrations', to: '/settings/integrations' },
+  { label: 'Kaira', to: '/settings/kaira' }
+];
+
 const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const isSettingsRoute = location.pathname.startsWith('/settings');
+  const onboardingStep = Number(parseAuth()?.onboarding_step || 0);
+  const showKairaPendingDot = onboardingStep < 3;
+
+  useEffect(() => {
+    if (isSettingsRoute) {
+      setSettingsOpen(true);
+    }
+  }, [isSettingsRoute]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -79,6 +98,73 @@ const Sidebar = () => {
               <span>{item.label}</span>
             </NavLink>
           ))}
+
+          <div className="space-y-2 sm:col-span-3 lg:col-span-1">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              className={[
+                'flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition',
+                isSettingsRoute
+                  ? 'bg-white text-black shadow-soft'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              ].join(' ')}
+            >
+              <span className="flex items-center gap-3">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="18" x2="20" y2="18" />
+                  <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+                  <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+                  <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none" />
+                </svg>
+                <span className="inline-flex items-center gap-2">
+                  <span>Settings</span>
+                  {showKairaPendingDot ? (
+                    <span className="rounded-full border border-amber-300/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
+                      Setup
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+              <svg
+                className={`h-4 w-4 transition ${settingsOpen ? 'rotate-180' : ''}`}
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              >
+                <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {settingsOpen ? (
+              <div className="space-y-1 pl-5">
+                {settingsItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      [
+                        'block rounded-lg px-3 py-2 text-xs font-medium transition',
+                        isActive ? 'bg-white/20 text-white' : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                      ].join(' ')
+                    }
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <span>{item.label}</span>
+                      {item.label === 'Kaira' && showKairaPendingDot ? (
+                        <span className="rounded-full border border-amber-300/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
+                          Setup
+                        </span>
+                      ) : null}
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </nav>
 
         <div className="mt-auto space-y-4">
