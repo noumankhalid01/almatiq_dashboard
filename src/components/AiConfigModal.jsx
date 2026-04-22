@@ -178,7 +178,7 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
                 Saving
               </span>
             ) : (
-              'Continue'
+              'Confirm'
             )}
           </button>
         </form>
