@@ -56,8 +56,13 @@ const Sidebar = () => {
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isSettingsRoute = location.pathname.startsWith('/settings');
-  const onboardingStep = Number(parseAuth()?.onboarding_step || 0);
+  const auth = parseAuth() || {};
+  const onboardingStep = Number(auth?.onboarding_step || 0);
   const showKairaPendingDot = onboardingStep < 3;
+  const showSquareSetup = Number(auth?.current_plan?.plan_id || 0) !== 1;
+  const showIntegrationsSetup = Boolean(
+    !auth?.twilio_status || !auth?.instagram_status || (showSquareSetup && !auth?.square_status)
+  );
 
   useEffect(() => {
     if (isSettingsRoute) {
@@ -121,7 +126,7 @@ const Sidebar = () => {
                 </svg>
                 <span className="inline-flex items-center gap-2">
                   <span>Settings</span>
-                  {showKairaPendingDot ? (
+                  {showKairaPendingDot || showIntegrationsSetup ? (
                     <span className="rounded-full border border-amber-300/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
                       Setup
                     </span>
@@ -154,7 +159,7 @@ const Sidebar = () => {
                   >
                     <span className="inline-flex items-center gap-2">
                       <span>{item.label}</span>
-                      {item.label === 'Kaira' && showKairaPendingDot ? (
+                      {(item.label === 'Kaira' && showKairaPendingDot) || (item.label === 'Integrations' && showIntegrationsSetup) ? (
                         <span className="rounded-full border border-amber-300/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-300">
                           Setup
                         </span>

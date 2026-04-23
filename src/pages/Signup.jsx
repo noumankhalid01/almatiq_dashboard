@@ -353,7 +353,7 @@ const Signup = () => {
                 {apiError ? (
                   <p className="text-center text-sm text-red-400">
                     {displayApiError}
-                    {shouldShowLoginLink(displayApiError) && !displayApiError.includes("Otherwise, use a different email or phone number") ? (
+                    {shouldShowLoginLink(displayApiError) ? (
                       <>
                         {' '}
                         <Link to="/login" className="ml-1 font-semibold text-white underline hover:text-gray-200">

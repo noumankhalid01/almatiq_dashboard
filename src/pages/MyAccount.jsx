@@ -223,31 +223,31 @@ const MyAccount = () => {
           {fieldErrors.address ? <p className="text-xs text-red-400">{fieldErrors.address}</p> : null}
         </label>
 
-        <div className="flex justify-end">
+        <div className="flex justify-start">
           {isEditingProfile ? (
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleCancelEdit}
+                onClick={handleDoneEdit}
                 disabled={savingProfile}
-                className="inline-flex h-9 items-center justify-center rounded-md border border-white/20 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/[0.08]"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Cancel
+                {savingProfile ? 'Saving...' : 'Add'}
               </button>
               <button
                 type="button"
-                onClick={handleDoneEdit}
+                onClick={handleCancelEdit}
                 disabled={savingProfile}
-                className="inline-flex h-9 items-center justify-center rounded-md bg-emerald-500 px-4 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-white/20 bg-white/[0.04] px-5 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/[0.08]"
               >
-                {savingProfile ? 'Saving...' : 'Done'}
+                Cancel
               </button>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setIsEditingProfile(true)}
-              className="inline-flex h-9 items-center justify-center rounded-md bg-emerald-500 px-4 text-sm font-semibold text-black transition hover:bg-emerald-400"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
             >
               Edit
             </button>
@@ -257,7 +257,7 @@ const MyAccount = () => {
 
       <div className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
         <div className="space-y-1 pb-4">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-xl font-semibold text-white">Subscription & Billing</h2>
             <span
               className={[
