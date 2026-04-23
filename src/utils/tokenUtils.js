@@ -1,4 +1,6 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const NETWORK_ERROR_MESSAGE =
+  'Oops! Something went wrong on our end. Please try again in a moment. If the problem keeps coming up, contact our support team.';
 const isInvalidTokenDetail = (payload) =>
   typeof payload?.detail === 'string' && payload.detail.toLowerCase() === 'invalid token';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
@@ -53,16 +55,22 @@ export const refreshAccessToken = async () => {
     throw new Error('Missing refresh token. Please log in again.');
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/refresh_token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {})
-    },
-    body: JSON.stringify({ refresh_token: refreshToken })
-  });
+  let response;
+  let payload;
+  try {
+    response = await fetch(`${API_BASE_URL}/auth/refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {})
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
 
-  const payload = await response.json().catch(() => null);
+    payload = await response.json().catch(() => null);
+  } catch {
+    throw new Error(NETWORK_ERROR_MESSAGE);
+  }
 
   if (response.status === 401 && isInvalidTokenDetail(payload)) {
     localStorage.clear();

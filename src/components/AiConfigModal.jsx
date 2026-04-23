@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import FloatingMessage from './FloatingMessage.jsx';
 import { apiPost } from '../services/apiClient.js';
 
 const toneOptions = [
@@ -19,12 +18,11 @@ const countWords = (value = '') =>
     .split(/\s+/)
     .filter(Boolean).length;
 
-const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
+const AiConfigModal = ({ open, onComplete, onClose, onToast, initialValues = {} }) => {
   const [tone, setTone] = useState(initialValues.tone || '');
   const [businessContext, setBusinessContext] = useState(initialValues.business_context || '');
   const [instructions, setInstructions] = useState(initialValues.instructions || '');
   const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const businessWordCount = useMemo(() => countWords(businessContext), [businessContext]);
@@ -36,7 +34,6 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
     setBusinessContext(initialValues.business_context || '');
     setInstructions(initialValues.instructions || '');
     setErrors({});
-    setApiError('');
   }, [open, initialValues]);
 
   if (!open) return null;
@@ -61,7 +58,6 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setApiError('');
     if (!validate()) return;
 
     setLoading(true);
@@ -77,6 +73,10 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
         payload,
         { auth: true }
       );
+      onToast?.({
+        type: 'success',
+        message: 'Kaira has been customized successfully.'
+      });
       const nextPayload = {
         tone: payload.tone,
         instructions: payload.instructions,
@@ -84,7 +84,10 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
       };
       onComplete?.(nextPayload);
     } catch (error) {
-      setApiError(error.message || 'Unable to save AI configuration.');
+      onToast?.({
+        type: 'error',
+        message: error.message || 'Unable to save AI configuration.'
+      });
     } finally {
       setLoading(false);
     }
@@ -92,7 +95,6 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
-      <FloatingMessage message={apiError} type="error" onClose={() => setApiError('')} />
       <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:p-8">
         <div className="mb-2 flex justify-end">
           <button

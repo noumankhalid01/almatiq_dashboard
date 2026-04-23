@@ -19,6 +19,7 @@ const Kaira = () => {
     instructions: ''
   });
   const [error, setError] = useState('');
+  const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [flashError, setFlashError] = useState('');
   const [loadingConfig, setLoadingConfig] = useState(false);
   const [onboardingStep] = useState(() => Number(parseAuth()?.onboarding_step || 0));
@@ -52,11 +53,28 @@ const Kaira = () => {
     if (error) setFlashError(error);
   }, [error]);
 
+  useEffect(() => {
+    if (flashMessage.message) {
+      const timer = window.setTimeout(() => {
+        setFlashMessage({ message: '', type: 'error' });
+      }, 10000);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    return undefined;
+  }, [flashMessage.message]);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Kaira" subtitle={KAIRA_COPY} />
 
       <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
+      <FloatingMessage
+        message={flashMessage.message}
+        type={flashMessage.type}
+        onClose={() => setFlashMessage({ message: '', type: 'error' })}
+      />
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
         <label className="block space-y-2">
@@ -112,6 +130,7 @@ const Kaira = () => {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialValues={kairaConfig}
+        onToast={(nextMessage) => setFlashMessage(nextMessage)}
         onComplete={(payload) => {
           setKairaConfig(payload);
 

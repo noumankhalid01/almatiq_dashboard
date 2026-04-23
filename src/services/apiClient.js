@@ -1,6 +1,8 @@
 import { getAccessToken, refreshAccessToken } from '../utils/tokenUtils.js';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const NETWORK_ERROR_MESSAGE =
+  'Oops! Something went wrong on our end. Please try again in a moment. If the problem keeps coming up, contact our support team.';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
 const getNgrokBypassHeaders = () =>
   IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {};
@@ -39,13 +41,17 @@ export const apiPost = async (path, body, { auth = false } = {}) => {
     if (auth && tokenOverride) {
       requestHeaders.Authorization = `Bearer ${tokenOverride}`;
     }
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'POST',
-      headers: requestHeaders,
-      body: JSON.stringify(body)
-    });
-    const payload = await response.json().catch(() => null);
-    return { response, payload };
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: JSON.stringify(body)
+      });
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    } catch {
+      throw new Error(NETWORK_ERROR_MESSAGE);
+    }
   };
 
   let { response, payload } = await call();
@@ -88,13 +94,17 @@ export const apiPatch = async (path, body, { auth = false } = {}) => {
     if (auth && tokenOverride) {
       requestHeaders.Authorization = `Bearer ${tokenOverride}`;
     }
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'PATCH',
-      headers: requestHeaders,
-      body: JSON.stringify(body)
-    });
-    const payload = await response.json().catch(() => null);
-    return { response, payload };
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'PATCH',
+        headers: requestHeaders,
+        body: JSON.stringify(body)
+      });
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    } catch {
+      throw new Error(NETWORK_ERROR_MESSAGE);
+    }
   };
 
   let { response, payload } = await call();
@@ -139,12 +149,16 @@ export const apiGet = async (path, { auth = false } = {}) => {
     if (auth && tokenOverride) {
       requestHeaders.Authorization = `Bearer ${tokenOverride}`;
     }
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'GET',
-      headers: requestHeaders
-    });
-    const payload = await response.json().catch(() => null);
-    return { response, payload };
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'GET',
+        headers: requestHeaders
+      });
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    } catch {
+      throw new Error(NETWORK_ERROR_MESSAGE);
+    }
   };
 
   let { response, payload } = await call();
