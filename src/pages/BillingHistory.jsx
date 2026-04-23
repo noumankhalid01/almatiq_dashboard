@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import Table from '../components/Table.jsx';
 import Pagination from '../components/Pagination.jsx';
@@ -15,6 +16,7 @@ const BillingHistory = () => {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [flashError, setFlashError] = useState('');
 
   useEffect(() => {
     const loadPaymentHistory = async () => {
@@ -33,6 +35,10 @@ const BillingHistory = () => {
 
     loadPaymentHistory();
   }, []);
+
+  useEffect(() => {
+    if (error) setFlashError(error);
+  }, [error]);
 
   const filteredHistory = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -57,11 +63,7 @@ const BillingHistory = () => {
     <div className="space-y-6">
       <PageHeader title="Billing History" subtitle="Track invoices and billing activity for your plan." />
 
-      {error ? (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-6 py-4 text-center text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
 
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-black/40 px-3 py-2.5 shadow-soft">
         <div className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-black/50 px-3">

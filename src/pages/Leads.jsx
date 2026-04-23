@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import Table from '../components/Table.jsx';
 import Pagination from '../components/Pagination.jsx';
@@ -10,6 +11,11 @@ import { formatDateTime } from '../utils/formatters.js';
 const Leads = () => {
   const { data: leads, loading, error } = useSheetData(SHEET_NAMES.leads);
   const [query, setQuery] = useState('');
+  const [flashError, setFlashError] = useState('');
+
+  useEffect(() => {
+    if (error) setFlashError(error);
+  }, [error]);
 
   const filteredLeads = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -31,11 +37,7 @@ const Leads = () => {
         subtitle="Review inbound customer inquiries and marketing leads synced from Google Sheets."
       />
 
-      {error ? (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-6 py-4 text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
 
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-black/40 px-3 py-2.5 shadow-soft">
         <div className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-black/50 px-3">

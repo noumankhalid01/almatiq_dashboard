@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import StatCard from '../components/StatCard.jsx';
 import Table from '../components/Table.jsx';
@@ -16,6 +18,11 @@ const Overview = () => {
 
   const loading = bookingsLoading || leadsLoading;
   const error = bookingsError || leadsError;
+  const [flashError, setFlashError] = useState('');
+
+  useEffect(() => {
+    if (error) setFlashError(error);
+  }, [error]);
 
   const latestBookings = bookings.slice(-5).reverse();
 
@@ -26,11 +33,7 @@ const Overview = () => {
         subtitle="Overview of your bookings and performance."
       />
 
-      {error ? (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-6 py-4 text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <StatCard

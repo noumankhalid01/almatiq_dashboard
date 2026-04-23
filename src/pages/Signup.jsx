@@ -45,6 +45,14 @@ const shouldShowLoginLink = (message = '') =>
   message.toLowerCase().includes('please log in') ||
   message.toLowerCase().includes('please login');
 
+const normalizeSignupError = (message = '') => {
+  const normalized = message.toLowerCase();
+  if (normalized.includes('already exists')) {
+    return "An account with this email or phone already exists. If you started signing up but haven't completed payment, please log in to continue. Otherwise, use a different email or phone number to create a new account.";
+  }
+  return message;
+};
+
 const getPlanFeatures = (planName = '', index = 0) => {
   const key = planName.toLowerCase();
   if (key.includes('basic') || index === 0) {
@@ -101,6 +109,7 @@ const Signup = () => {
     () => plans.find((plan) => String(plan.id) === String(selectedPlanId)),
     [plans, selectedPlanId]
   );
+  const displayApiError = normalizeSignupError(apiError);
 
   const setFieldValue = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
@@ -343,8 +352,8 @@ const Signup = () => {
 
                 {apiError ? (
                   <p className="text-center text-sm text-red-400">
-                    {apiError}
-                    {shouldShowLoginLink(apiError) ? (
+                    {displayApiError}
+                    {shouldShowLoginLink(displayApiError) && !displayApiError.includes("Otherwise, use a different email or phone number") ? (
                       <>
                         {' '}
                         <Link to="/login" className="ml-1 font-semibold text-white underline hover:text-gray-200">

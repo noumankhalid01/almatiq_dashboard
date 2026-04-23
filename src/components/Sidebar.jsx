@@ -171,7 +171,7 @@ const Sidebar = () => {
           <button
             type="button"
             onClick={handleLogout}
-            className="group flex w-full items-center rounded-xl border border-red-400/35 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-100 transition hover:border-red-300/60 hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/40"
+            className="group flex w-full items-center rounded-xl border border-red-400/35 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-100 shadow-2xl backdrop-blur-xl transition hover:border-red-300/60 hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/40"
           >
             <span className="flex items-center gap-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-red-500/20 text-red-200 transition group-hover:bg-red-500/30 group-hover:text-red-100">

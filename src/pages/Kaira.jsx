@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AiConfigModal from '../components/AiConfigModal.jsx';
+import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { apiGet } from '../services/apiClient.js';
 import { parseAuth, saveAuth } from '../utils/tokenUtils.js';
@@ -18,6 +19,7 @@ const Kaira = () => {
     instructions: ''
   });
   const [error, setError] = useState('');
+  const [flashError, setFlashError] = useState('');
   const [loadingConfig, setLoadingConfig] = useState(false);
   const [onboardingStep] = useState(() => Number(parseAuth()?.onboarding_step || 0));
 
@@ -46,15 +48,15 @@ const Kaira = () => {
     loadAiConfig();
   }, [kairaConfig, onboardingStep]);
 
+  useEffect(() => {
+    if (error) setFlashError(error);
+  }, [error]);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Kaira" subtitle={KAIRA_COPY} />
 
-      {error ? (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-6 py-4 text-center text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
         <label className="block space-y-2">

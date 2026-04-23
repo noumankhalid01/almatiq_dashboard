@@ -53,3 +53,26 @@ body {
   background: #2f2f2f;
   border-radius: 999px;
 }
+
+@keyframes toast-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.toast-fade {
+  animation: toast-fade 10s ease forwards;
+}

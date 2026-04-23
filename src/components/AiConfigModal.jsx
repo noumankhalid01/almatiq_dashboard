@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import FloatingMessage from './FloatingMessage.jsx';
 import { apiPost } from '../services/apiClient.js';
 
 const toneOptions = [
@@ -91,6 +92,7 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
+      <FloatingMessage message={apiError} type="error" onClose={() => setApiError('')} />
       <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:p-8">
         <div className="mb-2 flex justify-end">
           <button
@@ -164,8 +166,6 @@ const AiConfigModal = ({ open, onComplete, onClose, initialValues = {} }) => {
             <p className="text-right text-xs text-gray-400">{instructionsWordCount}/200 words</p>
             {errors.instructions ? <p className="text-xs text-red-400">{errors.instructions}</p> : null}
           </label>
-
-          {apiError ? <p className="text-center text-sm text-red-400">{apiError}</p> : null}
 
           <button
             type="submit"
