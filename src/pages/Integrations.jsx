@@ -347,7 +347,7 @@ const Integrations = () => {
               'inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
               instagramConnected
                 ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-[#16a34a] text-black hover:bg-[#15803d]'
+                : 'bg-[#16a34a] text-white hover:bg-[#15803d]'
             ].join(' ')}
           >
             {instagramConnected ? 'Disconnect Instagram' : 'Connect Instagram'}
