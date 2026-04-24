@@ -5,7 +5,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import instagramLogo from '../assets/instagram_logo.png';
 import squareLogo from '../assets/square_logo.png';
 import twilioLogo from '../assets/twilio_logo.png';
-import { apiPost } from '../services/apiClient.js';
+import { apiPatch, apiPost } from '../services/apiClient.js';
 import { parseAuth, saveAuth } from '../utils/tokenUtils.js';
 
 const emptyAction = (label) => () => {
@@ -50,7 +50,16 @@ const BulletItem = ({ children }) => (
   </li>
 );
 
-const ConfirmModal = ({ open, title, message, confirmLabel, cancelLabel = 'Cancel', onConfirm, onCancel }) => {
+const ConfirmModal = ({
+  open,
+  title,
+  message,
+  confirmLabel,
+  cancelLabel = 'Cancel',
+  confirmDisabled = false,
+  onConfirm,
+  onCancel
+}) => {
   if (!open) return null;
 
   return (
@@ -69,9 +78,10 @@ const ConfirmModal = ({ open, title, message, confirmLabel, cancelLabel = 'Cance
           <button
             type="button"
             onClick={onConfirm}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700"
+            disabled={confirmDisabled}
+            className="inline-flex h-11 items-center justify-center rounded-md bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {confirmLabel}
+            {confirmDisabled ? 'Working...' : confirmLabel}
           </button>
         </div>
       </div>
@@ -93,6 +103,7 @@ const Integrations = () => {
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [isExchangingInstagramCode, setIsExchangingInstagramCode] = useState(false);
   const [showDisconnectInstagramModal, setShowDisconnectInstagramModal] = useState(false);
+  const [isDisconnectingInstagram, setIsDisconnectingInstagram] = useState(false);
   const twilioConnected = Boolean(auth.twilio_status);
   const instagramConnected = Boolean(auth.instagram_status);
   const squareConnected = Boolean(auth.square_status);
@@ -110,8 +121,32 @@ const Integrations = () => {
     }
   }, [isEditingTwilio]);
 
-  const handleConfirmDisconnectInstagram = () => {
-    setShowDisconnectInstagramModal(false);
+  const handleConfirmDisconnectInstagram = async () => {
+    setIsDisconnectingInstagram(true);
+    setFlashMessage({ message: '', type: 'error' });
+
+    try {
+      const response = await apiPatch('/integrations/ig/disconnect', null, { auth: true });
+      const currentAuth = parseAuth() || {};
+      saveAuth({
+        ...currentAuth,
+        ...(response && typeof response === 'object' ? response : {}),
+        instagram_status: false
+      });
+      setFlashMessage({
+        type: 'success',
+        message: 'Instagram disconnected successfully.'
+      });
+      setShowDisconnectInstagramModal(false);
+    } catch (error) {
+      setFlashMessage({
+        type: 'error',
+        message: error.message || 'Unable to disconnect Instagram right now.'
+      });
+      setShowDisconnectInstagramModal(false);
+    } finally {
+      setIsDisconnectingInstagram(false);
+    }
   };
 
   useEffect(() => {
@@ -195,6 +230,7 @@ const Integrations = () => {
         message="Once disconnected, Kaira will no longer be able to respond to your Instagram DMs or manage conversations on your behalf. Your Instagram account will remain intact - you can reconnect anytime from the Integrations page."
         confirmLabel="Confirm"
         cancelLabel="Cancel"
+        confirmDisabled={isDisconnectingInstagram}
         onCancel={() => setShowDisconnectInstagramModal(false)}
         onConfirm={handleConfirmDisconnectInstagram}
       />

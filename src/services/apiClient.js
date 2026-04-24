@@ -97,7 +97,7 @@ export const apiPatch = async (path, body, { auth = false } = {}) => {
       const response = await fetch(`${API_BASE_URL}${path}`, {
         method: 'PATCH',
         headers: requestHeaders,
-        body: JSON.stringify(body)
+        body: body == null ? undefined : JSON.stringify(body)
       });
       const payload = await response.json().catch(() => null);
       return { response, payload };
