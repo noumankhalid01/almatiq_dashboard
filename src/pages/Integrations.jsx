@@ -50,6 +50,35 @@ const BulletItem = ({ children }) => (
   </li>
 );
 
+const ConfirmModal = ({ open, title, message, confirmLabel, cancelLabel = 'Cancel', onConfirm, onCancel }) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:p-8">
+        <h3 className="text-xl font-semibold text-white">{title}</h3>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-gray-300">{message}</p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-11 items-center justify-center rounded-md border border-white/20 bg-white/[0.04] px-5 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/[0.08]"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="inline-flex h-11 items-center justify-center rounded-md bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700"
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Integrations = () => {
   const location = useLocation();
   const auth = parseAuth() || {};
@@ -63,6 +92,7 @@ const Integrations = () => {
   const [showTwilioSecrets, setShowTwilioSecrets] = useState(false);
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [isExchangingInstagramCode, setIsExchangingInstagramCode] = useState(false);
+  const [showDisconnectInstagramModal, setShowDisconnectInstagramModal] = useState(false);
   const twilioConnected = Boolean(auth.twilio_status);
   const instagramConnected = Boolean(auth.instagram_status);
   const squareConnected = Boolean(auth.square_status);
@@ -80,6 +110,10 @@ const Integrations = () => {
     }
   }, [isEditingTwilio]);
 
+  const handleConfirmDisconnectInstagram = () => {
+    setShowDisconnectInstagramModal(false);
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const code = params.get('code') || '';
@@ -92,7 +126,7 @@ const Integrations = () => {
     const exchangeInstagramCode = async () => {
       try {
         const response = await apiPost(
-          '/ig/exchange_code',
+          '/ig/connect',
           { code },
           { auth: true }
         );
@@ -151,6 +185,15 @@ const Integrations = () => {
         message={flashMessage.message}
         type={flashMessage.type}
         onClose={() => setFlashMessage({ message: '', type: 'error' })}
+      />
+      <ConfirmModal
+        open={showDisconnectInstagramModal}
+        title="Disconnect Instagram?"
+        message="Once disconnected, Kaira will no longer be able to respond to your Instagram DMs or manage conversations on your behalf. Your Instagram account will remain intact - you can reconnect anytime from the Integrations page."
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        onCancel={() => setShowDisconnectInstagramModal(false)}
+        onConfirm={handleConfirmDisconnectInstagram}
       />
 
       <section className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
@@ -212,7 +255,7 @@ const Integrations = () => {
                   setIsEditingTwilio(false);
                   setShowTwilioSecrets(false);
                 }}
-                className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
               >
                 Add
               </button>
@@ -234,7 +277,7 @@ const Integrations = () => {
                 setShowTwilioSecrets(true);
                 setIsEditingTwilio(true);
               }}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
             >
               Add Credentials
             </button>
@@ -282,6 +325,11 @@ const Integrations = () => {
             type="button"
             disabled={isExchangingInstagramCode}
             onClick={() => {
+              if (instagramConnected) {
+                setShowDisconnectInstagramModal(true);
+                return;
+              }
+
               if (instagramLoginUrl) {
                 const redirectUrl = new URL(instagramLoginUrl, window.location.origin);
                 if (instagramState) {
@@ -295,9 +343,14 @@ const Integrations = () => {
                 });
               }
             }}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className={[
+              'inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+              instagramConnected
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-[#16a34a] text-black hover:bg-[#15803d]'
+            ].join(' ')}
           >
-            Connect Instagram
+            {instagramConnected ? 'Disconnect Instagram' : 'Connect Instagram'}
           </button>
         </div>
       </section>
@@ -319,7 +372,7 @@ const Integrations = () => {
             <button
               type="button"
               onClick={emptyAction('Connect Square')}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
             >
               Connect Square
             </button>

@@ -366,7 +366,7 @@ const Signup = () => {
 
                 <button
                   type="submit"
-                  className="inline-flex h-11 w-full items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={loading}
                 >
                   {loading ? (
@@ -490,7 +490,7 @@ const Signup = () => {
                   type="button"
                   onClick={handleOpenCheckoutConfirm}
                   disabled={loading}
-                  className="inline-flex h-11 w-full items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
                     <span className="inline-flex items-center gap-2">
@@ -524,7 +524,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="h-10 rounded-xl border border-white/20 px-4 text-sm font-medium text-gray-200 transition hover:border-white/40"
+                className="h-10 rounded-md border border-white/20 px-4 text-sm font-medium text-gray-200 transition hover:border-white/40"
                 disabled={loading}
               >
                 Go Back
@@ -532,7 +532,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={handleCreateAccount}
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-[#16a34a] px-4 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={loading}
               >
                 {loading ? (
@@ -573,7 +573,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowCheckoutConfirm(false)}
-                className="h-10 rounded-xl border border-white/20 px-4 text-sm font-medium text-gray-200 transition hover:border-white/40"
+                className="h-10 rounded-md border border-white/20 px-4 text-sm font-medium text-gray-200 transition hover:border-white/40"
                 disabled={loading}
               >
                 Go Back
@@ -581,7 +581,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={handleCheckout}
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-[#16a34a] px-4 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={loading}
               >
                 {loading ? (

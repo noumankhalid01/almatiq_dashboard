@@ -119,7 +119,7 @@ const Kaira = () => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
           >
             Customize Kaira
           </button>

@@ -177,11 +177,11 @@ const Login = () => {
 
             {apiError ? <p className="text-center text-sm text-red-400">{apiError}</p> : null}
 
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={loading}
-            >
+          <button
+            type="submit"
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading}
+          >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
