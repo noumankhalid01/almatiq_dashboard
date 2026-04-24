@@ -1,10 +1,8 @@
 import { parseCsv } from '../utils/csv.js';
+import { FRIENDLY_API_ERROR_MESSAGE, getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
 const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID;
 const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
-const NETWORK_ERROR_MESSAGE =
-  'Oops! Something went wrong on our end. Please try again in a moment. If the problem keeps coming up, contact our support team.';
-
 export const SHEET_NAMES = {
   bookings: import.meta.env.VITE_GOOGLE_SHEETS_BOOKINGS_SHEET || 'Bookings',
   leads: import.meta.env.VITE_GOOGLE_SHEETS_LEADS_SHEET || 'Leads'
@@ -47,11 +45,11 @@ export const fetchSheetData = async (sheetName) => {
   try {
     response = await fetch(url);
   } catch {
-    throw new Error(NETWORK_ERROR_MESSAGE);
+    throw new Error(FRIENDLY_API_ERROR_MESSAGE);
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to load sheet: ${response.status} ${response.statusText}`);
+    throw new Error(getFriendlyErrorMessage(`Failed to load sheet: ${response.status} ${response.statusText}`, FRIENDLY_API_ERROR_MESSAGE));
   }
 
   if (API_KEY) {

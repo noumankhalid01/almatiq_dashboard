@@ -1,6 +1,6 @@
+import { FRIENDLY_API_ERROR_MESSAGE, getFriendlyErrorMessage } from './errorMessages.js';
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-const NETWORK_ERROR_MESSAGE =
-  'Oops! Something went wrong on our end. Please try again in a moment. If the problem keeps coming up, contact our support team.';
 const isInvalidTokenDetail = (payload) =>
   typeof payload?.detail === 'string' && payload.detail.toLowerCase() === 'invalid token';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
@@ -69,7 +69,7 @@ export const refreshAccessToken = async () => {
 
     payload = await response.json().catch(() => null);
   } catch {
-    throw new Error(NETWORK_ERROR_MESSAGE);
+    throw new Error(FRIENDLY_API_ERROR_MESSAGE);
   }
 
   if (response.status === 401 && isInvalidTokenDetail(payload)) {
@@ -82,7 +82,7 @@ export const refreshAccessToken = async () => {
   }
 
   if (!response.ok || !payload?.access_token) {
-    throw new Error(payload?.detail || payload?.message || 'Unable to refresh access token.');
+    throw new Error(getFriendlyErrorMessage(payload, FRIENDLY_API_ERROR_MESSAGE));
   }
 
   setAccessToken(payload.access_token);

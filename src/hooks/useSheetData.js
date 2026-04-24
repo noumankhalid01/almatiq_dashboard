@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchSheetData } from '../services/googleSheetsService.js';
+import { FRIENDLY_API_ERROR_MESSAGE, getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
 const useSheetData = (sheetName) => {
   const [data, setData] = useState([]);
@@ -20,7 +21,7 @@ const useSheetData = (sheetName) => {
       const rows = await fetchSheetData(sheetName);
       setData(rows);
     } catch (err) {
-      setError(err?.message || 'Unable to fetch sheet data.');
+      setError(getFriendlyErrorMessage(err, FRIENDLY_API_ERROR_MESSAGE));
       setData([]);
     } finally {
       setLoading(false);

@@ -1,19 +1,18 @@
 import { getAccessToken, refreshAccessToken } from '../utils/tokenUtils.js';
+import { FRIENDLY_API_ERROR_MESSAGE, getFriendlyErrorMessage } from '../utils/errorMessages.js';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-const NETWORK_ERROR_MESSAGE =
-  'Oops! Something went wrong on our end. Please try again in a moment. If the problem keeps coming up, contact our support team.';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
 const getNgrokBypassHeaders = () =>
   IS_NGROK_BASE_URL ? { 'ngrok-skip-browser-warning': 'true' } : {};
 
 const toErrorMessage = (payload, fallback) => {
   if (!payload) return fallback;
-  if (typeof payload === 'string') return payload;
-  if (typeof payload.detail === 'string') return payload.detail;
-  if (typeof payload.message === 'string') return payload.message;
+  if (typeof payload === 'string') return getFriendlyErrorMessage(payload, fallback);
+  if (typeof payload.detail === 'string') return getFriendlyErrorMessage(payload.detail, fallback);
+  if (typeof payload.message === 'string') return getFriendlyErrorMessage(payload.message, fallback);
   if (Array.isArray(payload.errors) && payload.errors.length) {
-    return payload.errors.join(', ');
+    return getFriendlyErrorMessage(payload.errors.join(', '), fallback);
   }
   return fallback;
 };
@@ -50,7 +49,7 @@ export const apiPost = async (path, body, { auth = false } = {}) => {
       const payload = await response.json().catch(() => null);
       return { response, payload };
     } catch {
-      throw new Error(NETWORK_ERROR_MESSAGE);
+      throw new Error(FRIENDLY_API_ERROR_MESSAGE);
     }
   };
 
@@ -62,7 +61,7 @@ export const apiPost = async (path, body, { auth = false } = {}) => {
   }
 
   if (!response.ok) {
-    const error = new Error(toErrorMessage(payload, 'Something went wrong. Please try again.'));
+    const error = new Error(toErrorMessage(payload, FRIENDLY_API_ERROR_MESSAGE));
     error.status = response.status;
     error.payload = payload;
     throw error;
@@ -103,7 +102,7 @@ export const apiPatch = async (path, body, { auth = false } = {}) => {
       const payload = await response.json().catch(() => null);
       return { response, payload };
     } catch {
-      throw new Error(NETWORK_ERROR_MESSAGE);
+      throw new Error(FRIENDLY_API_ERROR_MESSAGE);
     }
   };
 
@@ -115,7 +114,7 @@ export const apiPatch = async (path, body, { auth = false } = {}) => {
   }
 
   if (!response.ok) {
-    const error = new Error(toErrorMessage(payload, 'Something went wrong. Please try again.'));
+    const error = new Error(toErrorMessage(payload, FRIENDLY_API_ERROR_MESSAGE));
     error.status = response.status;
     error.payload = payload;
     throw error;
@@ -157,7 +156,7 @@ export const apiGet = async (path, { auth = false } = {}) => {
       const payload = await response.json().catch(() => null);
       return { response, payload };
     } catch {
-      throw new Error(NETWORK_ERROR_MESSAGE);
+      throw new Error(FRIENDLY_API_ERROR_MESSAGE);
     }
   };
 
@@ -169,7 +168,7 @@ export const apiGet = async (path, { auth = false } = {}) => {
   }
 
   if (!response.ok) {
-    const error = new Error(toErrorMessage(payload, 'Something went wrong. Please try again.'));
+    const error = new Error(toErrorMessage(payload, FRIENDLY_API_ERROR_MESSAGE));
     error.status = response.status;
     error.payload = payload;
     throw error;
