@@ -131,8 +131,9 @@ const Integrations = () => {
           { auth: true }
         );
 
+        const currentAuth = parseAuth() || {};
         const nextAuth = {
-          ...auth,
+          ...currentAuth,
           ...(response && typeof response === 'object' ? response : {}),
           instagram_status:
             typeof response?.instagram_status === 'boolean'
@@ -150,18 +151,20 @@ const Integrations = () => {
         cleanedUrl.searchParams.delete('code');
         window.history.replaceState({}, '', `${cleanedUrl.pathname}${cleanedUrl.search}${cleanedUrl.hash}`);
       } catch (error) {
-        handledInstagramCodeRef.current = '';
         setFlashMessage({
           type: 'error',
           message: error.message || 'Unable to connect Instagram right now.'
         });
+        const cleanedUrl = new URL(window.location.href);
+        cleanedUrl.searchParams.delete('code');
+        window.history.replaceState({}, '', `${cleanedUrl.pathname}${cleanedUrl.search}${cleanedUrl.hash}`);
       } finally {
         setIsExchangingInstagramCode(false);
       }
     };
 
     exchangeInstagramCode();
-  }, [auth, location.search]);
+  }, [location.search]);
 
   return (
     <div className="space-y-6">
