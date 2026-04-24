@@ -92,7 +92,7 @@ const Integrations = () => {
     const exchangeInstagramCode = async () => {
       try {
         const response = await apiPost(
-          '/instagram/exchange-code',
+          '/ig/exchange_code',
           { code },
           { auth: true }
         );
