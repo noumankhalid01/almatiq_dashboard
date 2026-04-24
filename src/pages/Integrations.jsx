@@ -126,7 +126,7 @@ const Integrations = () => {
     const exchangeInstagramCode = async () => {
       try {
         const response = await apiPost(
-          '/ig/connect',
+          '/integrations/ig/connect',
           { code },
           { auth: true }
         );
