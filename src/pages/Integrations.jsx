@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import instagramLogo from '../assets/instagram_logo.png';
 import squareLogo from '../assets/square_logo.png';
 import twilioLogo from '../assets/twilio_logo.png';
-import { parseAuth } from '../utils/tokenUtils.js';
+import { apiPost } from '../services/apiClient.js';
+import { parseAuth, saveAuth } from '../utils/tokenUtils.js';
 
 const emptyAction = (label) => () => {
   void label;
@@ -49,15 +51,18 @@ const BulletItem = ({ children }) => (
 );
 
 const Integrations = () => {
+  const location = useLocation();
   const auth = parseAuth() || {};
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
   const showSquareSection = currentPlanId !== 1;
   const instagramLoginUrl = import.meta.env.VITE_INSTAGRAM_LOGIN_URL || '';
   const instagramState = String(auth?.id || auth?.tenant_id || '');
   const twilioSidRef = useRef(null);
+  const handledInstagramCodeRef = useRef('');
   const [isEditingTwilio, setIsEditingTwilio] = useState(false);
   const [showTwilioSecrets, setShowTwilioSecrets] = useState(false);
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
+  const [isExchangingInstagramCode, setIsExchangingInstagramCode] = useState(false);
   const twilioConnected = Boolean(auth.twilio_status);
   const instagramConnected = Boolean(auth.instagram_status);
   const squareConnected = Boolean(auth.square_status);
@@ -75,8 +80,69 @@ const Integrations = () => {
     }
   }, [isEditingTwilio]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code') || '';
+    if (!code || handledInstagramCodeRef.current === code) return;
+
+    handledInstagramCodeRef.current = code;
+    setIsExchangingInstagramCode(true);
+    setFlashMessage({ message: '', type: 'error' });
+
+    const exchangeInstagramCode = async () => {
+      try {
+        const response = await apiPost(
+          '/instagram/exchange-code',
+          { code },
+          { auth: true }
+        );
+
+        const nextAuth = {
+          ...auth,
+          ...(response && typeof response === 'object' ? response : {}),
+          instagram_status:
+            typeof response?.instagram_status === 'boolean'
+              ? response.instagram_status
+              : true
+        };
+
+        saveAuth(nextAuth);
+        setFlashMessage({
+          type: 'success',
+          message: 'Instagram connected successfully.'
+        });
+
+        const cleanedUrl = new URL(window.location.href);
+        cleanedUrl.searchParams.delete('code');
+        window.history.replaceState({}, '', `${cleanedUrl.pathname}${cleanedUrl.search}${cleanedUrl.hash}`);
+      } catch (error) {
+        handledInstagramCodeRef.current = '';
+        setFlashMessage({
+          type: 'error',
+          message: error.message || 'Unable to connect Instagram right now.'
+        });
+      } finally {
+        setIsExchangingInstagramCode(false);
+      }
+    };
+
+    exchangeInstagramCode();
+  }, [auth, location.search]);
+
   return (
     <div className="space-y-6">
+      {isExchangingInstagramCode ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-white">Connecting Instagram</p>
+              <p className="text-sm text-gray-400">Please wait while we finish the OAuth callback.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <PageHeader
         title="Integrations"
         subtitle="Connect your business tools so Kaira can manage conversations, bookings, and payments seamlessly across every channel."
@@ -215,6 +281,7 @@ const Integrations = () => {
         <div className="flex justify-start">
           <button
             type="button"
+            disabled={isExchangingInstagramCode}
             onClick={() => {
               if (instagramLoginUrl) {
                 const redirectUrl = new URL(instagramLoginUrl, window.location.origin);
@@ -229,7 +296,7 @@ const Integrations = () => {
                 });
               }
             }}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-500 px-5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Connect Instagram
           </button>
