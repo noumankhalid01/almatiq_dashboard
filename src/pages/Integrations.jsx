@@ -136,8 +136,7 @@ const Integrations = () => {
           <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
             <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
             <div className="space-y-1">
-              <p className="text-base font-semibold text-white">Connecting Instagram</p>
-              <p className="text-sm text-gray-400">Please wait while we finish the OAuth callback.</p>
+              <p className="text-base font-semibold text-white">Setting up your Instagram connection...</p>
             </div>
           </div>
         </div>
