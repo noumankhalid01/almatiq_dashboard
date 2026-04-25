@@ -293,11 +293,13 @@ const Integrations = () => {
     try {
       const response = await apiPatch('/integrations/ig/disconnect', null, { auth: true });
       const currentAuth = parseAuth() || {};
-      saveAuth({
+      const nextAuth = {
         ...currentAuth,
         ...(response && typeof response === 'object' ? response : {}),
         instagram_status: false
-      });
+      };
+      saveAuth(nextAuth);
+      setAuth(nextAuth);
       setFlashMessage({
         type: 'success',
         message: 'Instagram disconnected successfully.'
@@ -457,6 +459,7 @@ const Integrations = () => {
         };
 
         saveAuth(nextAuth);
+        setAuth(nextAuth);
         setFlashMessage({
           type: 'success',
           message: 'Instagram connected successfully.'
