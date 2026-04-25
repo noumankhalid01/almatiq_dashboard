@@ -94,8 +94,8 @@ const AiConfigModal = ({ open, onComplete, onClose, onToast, initialValues = {} 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:p-8">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-4 sm:items-center">
+      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto sm:p-8">
         <div className="mb-2 flex justify-end">
           <button
             type="button"

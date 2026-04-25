@@ -513,8 +513,8 @@ const Signup = () => {
       </section>
 
       {showConfirm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-4 py-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto">
             <h2 className="font-display text-xl font-semibold text-white">Confirm Your Details</h2>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-300">
               Please confirm your details are correct before proceeding. Once submitted, your
@@ -550,8 +550,8 @@ const Signup = () => {
       ) : null}
 
       {showCheckoutConfirm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-4 py-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto">
             <h2 className="font-display text-xl font-semibold text-white">Confirm Plan Selection</h2>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-300">
               You have selected{' '}

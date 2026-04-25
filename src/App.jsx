@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar.jsx';
 import Overview from './pages/Overview.jsx';
 import Bookings from './pages/Bookings.jsx';
 import Leads from './pages/Leads.jsx';
+import Services from './pages/Services.jsx';
 import BillingHistory from './pages/BillingHistory.jsx';
 import MyAccount from './pages/MyAccount.jsx';
 import Integrations from './pages/Integrations.jsx';
@@ -53,6 +54,7 @@ const AppRoutes = () => {
               <Route path="/" element={<Overview />} />
               <Route path="/bookings" element={<Bookings />} />
               <Route path="/leads" element={<Leads />} />
+              <Route path="/services" element={<Services />} />
               <Route path="/billing-history" element={<BillingHistory />} />
               <Route path="/settings/my-account" element={<MyAccount />} />
               <Route path="/settings/integrations" element={<Integrations />} />

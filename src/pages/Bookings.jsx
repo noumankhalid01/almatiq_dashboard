@@ -10,7 +10,7 @@ import { SHEET_NAMES } from '../services/googleSheetsService.js';
 import { formatDate, formatDateTime, formatTime, toTitleCase } from '../utils/formatters.js';
 
 const Bookings = () => {
-  const { data: bookings, loading, error } = useSheetData(SHEET_NAMES.bookings);
+  const { data: bookings, loading, error, lastUpdated, refresh } = useSheetData(SHEET_NAMES.bookings);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -58,6 +58,15 @@ const Bookings = () => {
       <PageHeader
         title="Bookings"
         subtitle="Manage booking requests and stay on top of upcoming visits."
+        actions={
+          <button
+            type="button"
+            onClick={refresh}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+          >
+            Refresh
+          </button>
+        }
       />
 
       <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
@@ -129,7 +138,7 @@ const Bookings = () => {
           </span>{' '}
           of <span className="font-semibold text-white">{filteredBookings.length}</span> bookings
         </span>
-        <span>Updated {formatDateTime(new Date())}</span>
+        {lastUpdated ? <span>Updated {formatDateTime(lastUpdated)}</span> : null}
       </div>
 
       <Table

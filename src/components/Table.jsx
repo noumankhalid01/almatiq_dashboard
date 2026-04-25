@@ -1,12 +1,39 @@
-const Table = ({ columns, rows, renderCell, rowKey, emptyMessage = 'No data available.' }) => {
+const getAlignmentClass = (align) => {
+  if (align === 'center') return 'text-center';
+  if (align === 'right') return 'text-right';
+  return 'text-left';
+};
+
+const Table = ({
+  columns = [],
+  rows,
+  renderCell,
+  rowKey,
+  emptyMessage = 'No data available.',
+  tableClassName = ''
+}) => {
+  const resolvedColumns =
+    columns.length > 0
+      ? columns
+      : rows.length > 0
+        ? Object.keys(rows[0]).map((key) => ({
+            key,
+            label: key,
+            align: 'left'
+          }))
+        : [];
+
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-soft">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="border-b border-white/10 bg-black/40 text-xs uppercase tracking-[0.18em] text-gray-400">
+        <table className={`min-w-full text-sm ${tableClassName}`}>
+          <thead className="border-b border-white/20 bg-white/10 text-xs uppercase tracking-[0.18em] text-white backdrop-blur-xl">
             <tr>
-              {columns.map((column) => (
-                <th key={column.key} className={`px-5 py-4 text-center font-medium ${column.className || ''}`}>
+              {resolvedColumns.map((column) => (
+                <th
+                  key={column.key}
+                  className={`px-5 py-4 font-medium ${getAlignmentClass(column.align)} ${column.className || ''}`}
+                >
                   {column.label}
                 </th>
               ))}
@@ -19,8 +46,11 @@ const Table = ({ columns, rows, renderCell, rowKey, emptyMessage = 'No data avai
                   key={rowKey ? rowKey(row, index) : index}
                   className="text-gray-100 transition-colors hover:bg-white/5"
                 >
-                  {columns.map((column) => (
-                    <td key={column.key} className={`px-5 py-4 text-center ${column.cellClassName || ''}`}>
+                  {resolvedColumns.map((column) => (
+                    <td
+                      key={column.key}
+                      className={`px-5 py-4 ${getAlignmentClass(column.align)} ${column.cellClassName || ''}`}
+                    >
                       {renderCell ? renderCell(row, column.key) : row[column.key] ?? '—'}
                     </td>
                   ))}
@@ -28,7 +58,7 @@ const Table = ({ columns, rows, renderCell, rowKey, emptyMessage = 'No data avai
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-5 py-10 text-center text-sm text-gray-400">
+                <td colSpan={resolvedColumns.length} className="px-5 py-10 text-center text-sm text-gray-400">
                   {emptyMessage}
                 </td>
               </tr>

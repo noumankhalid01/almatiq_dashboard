@@ -12,25 +12,50 @@ const Overview = () => {
   const {
     data: bookings,
     loading: bookingsLoading,
-    error: bookingsError
+    error: bookingsError,
+    lastUpdated: bookingsLastUpdated,
+    refresh: refreshBookings
   } = useSheetData(SHEET_NAMES.bookings);
-  const { data: leads, loading: leadsLoading, error: leadsError } = useSheetData(SHEET_NAMES.leads);
+  const {
+    data: leads,
+    loading: leadsLoading,
+    error: leadsError,
+    lastUpdated: leadsLastUpdated,
+    refresh: refreshLeads
+  } = useSheetData(SHEET_NAMES.leads);
 
   const loading = bookingsLoading || leadsLoading;
   const error = bookingsError || leadsError;
   const [flashError, setFlashError] = useState('');
+  const overviewLastUpdated = [bookingsLastUpdated, leadsLastUpdated]
+    .filter(Boolean)
+    .sort()
+    .at(-1);
 
   useEffect(() => {
     if (error) setFlashError(error);
   }, [error]);
 
   const latestBookings = bookings.slice(-5).reverse();
+  const handleRefresh = () => {
+    refreshBookings();
+    refreshLeads();
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Overview"
         subtitle="Overview of your bookings and performance."
+        actions={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+          >
+            Refresh
+          </button>
+        }
       />
 
       <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
@@ -55,7 +80,9 @@ const Overview = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold text-white">Latest Bookings</h2>
-          <span className="text-xs text-gray-400">Updated {formatDateTime(new Date())}</span>
+          {overviewLastUpdated ? (
+            <span className="text-xs text-gray-400">Updated {formatDateTime(overviewLastUpdated)}</span>
+          ) : null}
         </div>
         <Table
           columns={[

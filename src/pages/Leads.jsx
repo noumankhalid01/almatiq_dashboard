@@ -9,7 +9,7 @@ import { SHEET_NAMES } from '../services/googleSheetsService.js';
 import { formatDateTime } from '../utils/formatters.js';
 
 const Leads = () => {
-  const { data: leads, loading, error } = useSheetData(SHEET_NAMES.leads);
+  const { data: leads, loading, error, lastUpdated, refresh } = useSheetData(SHEET_NAMES.leads);
   const [query, setQuery] = useState('');
   const [flashError, setFlashError] = useState('');
 
@@ -35,6 +35,15 @@ const Leads = () => {
       <PageHeader
         title="Leads"
         subtitle="Review inbound customer inquiries and marketing leads synced from Google Sheets."
+        actions={
+          <button
+            type="button"
+            onClick={refresh}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+          >
+            Refresh
+          </button>
+        }
       />
 
       <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
@@ -63,7 +72,7 @@ const Leads = () => {
           </span>{' '}
           of <span className="font-semibold text-white">{filteredLeads.length}</span> leads
         </span>
-        <span>Updated {formatDateTime(new Date())}</span>
+        {lastUpdated ? <span>Updated {formatDateTime(lastUpdated)}</span> : null}
       </div>
 
       <Table

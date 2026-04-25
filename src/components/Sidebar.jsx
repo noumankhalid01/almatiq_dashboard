@@ -35,6 +35,17 @@ const navItems = [
     )
   },
   {
+    label: 'Services',
+    to: '/services',
+    icon: (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M10 6h4a2 2 0 0 1 2 2v1h3a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a1 1 0 0 1 1-1h3V8a2 2 0 0 1 2-2Z" />
+        <path d="M9 6V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
+        <path d="M3 12h18" />
+      </svg>
+    )
+  },
+  {
     label: 'Billing History',
     to: '/billing-history',
     icon: (

@@ -64,8 +64,8 @@ const ConfirmModal = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:p-8">
+    <div className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-4 sm:items-center">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto sm:p-8">
         <h3 className="text-xl font-semibold text-white">{title}</h3>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-gray-300">{message}</p>
         <div className="mt-8 flex items-center justify-center gap-3">
@@ -104,8 +104,8 @@ const TwilioCredentialsModal = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:p-8">
+    <div className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-4 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto sm:p-8">
         <div className="mb-2 flex justify-end">
           <button
             type="button"
@@ -516,8 +516,8 @@ const Integrations = () => {
   return (
     <div className="space-y-6">
       {isExchangingInstagramCode ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm">
-          <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/75 px-4 py-4 backdrop-blur-sm sm:items-center">
+          <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto">
             <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
             <div className="space-y-1">
               <p className="text-base font-semibold text-white">Setting up your Instagram connection...</p>

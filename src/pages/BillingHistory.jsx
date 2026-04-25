@@ -1,40 +1,90 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import Table from '../components/Table.jsx';
 import Pagination from '../components/Pagination.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import usePagination from '../hooks/usePagination.js';
 import { apiGet } from '../services/apiClient.js';
 import { formatDateTime, toTitleCase } from '../utils/formatters.js';
 
 const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
+const billingHistoryCache = new Map();
+const billingHistoryInFlight = new Map();
 
 const BillingHistory = () => {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { auth } = useAuth();
+  const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
+  const cachedHistory = billingHistoryCache.get(authKey);
+  const [history, setHistory] = useState(() => cachedHistory?.data || []);
+  const [loading, setLoading] = useState(() => !cachedHistory);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
   const [flashError, setFlashError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(() => cachedHistory?.lastUpdated || null);
 
-  useEffect(() => {
-    const loadPaymentHistory = async () => {
+  const loadPaymentHistory = useCallback(
+    async ({ force = false } = {}) => {
+      if (!force) {
+        const cached = billingHistoryCache.get(authKey);
+        if (cached) {
+          setHistory(cached.data);
+          setLastUpdated(cached.lastUpdated);
+          setLoading(false);
+          setError('');
+          return;
+        }
+
+        const inFlight = billingHistoryInFlight.get(authKey);
+        if (inFlight) {
+          setLoading(true);
+          setError('');
+          try {
+            const cachedResult = await inFlight;
+            setHistory(cachedResult.data);
+            setLastUpdated(cachedResult.lastUpdated);
+          } catch (err) {
+            setHistory([]);
+            setError(err?.message || 'Unable to fetch billing history.');
+          } finally {
+            setLoading(false);
+          }
+          return;
+        }
+      }
+
       setLoading(true);
       setError('');
+      const request = apiGet('/payments/payment_history', { auth: true }).then((response) => {
+        const nextHistory = Array.isArray(response) ? response : [];
+        const updatedAt = new Date().toISOString();
+        const nextValue = { data: nextHistory, lastUpdated: updatedAt };
+        billingHistoryCache.set(authKey, nextValue);
+        return nextValue;
+      });
+
+      billingHistoryInFlight.set(authKey, request);
+
       try {
-        const response = await apiGet('/payments/payment_history', { auth: true });
-        setHistory(Array.isArray(response) ? response : []);
+        const result = await request;
+        setHistory(result.data);
+        setLastUpdated(result.lastUpdated);
       } catch (err) {
         setHistory([]);
         setError(err?.message || 'Unable to fetch billing history.');
       } finally {
+        billingHistoryInFlight.delete(authKey);
         setLoading(false);
       }
-    };
+    },
+    [authKey]
+  );
 
+  useEffect(() => {
     loadPaymentHistory();
-  }, []);
+  }, [loadPaymentHistory]);
 
   useEffect(() => {
     if (error) setFlashError(error);
@@ -61,7 +111,19 @@ const BillingHistory = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing History" subtitle="Track invoices and billing activity for your plan." />
+      <PageHeader
+        title="Billing History"
+        subtitle="Track invoices and billing activity for your plan."
+        actions={
+          <button
+            type="button"
+            onClick={() => loadPaymentHistory({ force: true })}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+          >
+            Refresh
+          </button>
+        }
+      />
 
       <FloatingMessage message={flashError} type="error" onClose={() => setFlashError('')} />
 
@@ -109,7 +171,7 @@ const BillingHistory = () => {
           </span>{' '}
           of <span className="font-semibold text-white">{filteredHistory.length}</span> invoices
         </span>
-        <span>Updated {formatDateTime(new Date())}</span>
+        {lastUpdated ? <span>Updated {formatDateTime(lastUpdated)}</span> : null}
       </div>
 
       <Table
