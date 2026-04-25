@@ -9,18 +9,24 @@ import Integrations from './pages/Integrations.jsx';
 import Kaira from './pages/Kaira.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
+import AiConfigModal from './components/AiConfigModal.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 
 const AppRoutes = () => {
   const location = useLocation();
+  const { auth, login, logoutReason } = useAuth();
   const isAuthRoute = location.pathname.startsWith('/signup') || location.pathname.startsWith('/login');
-  const isAuthenticated = Boolean(localStorage.getItem('auth'));
+  const isAuthenticated = Boolean(auth);
 
   if (!isAuthenticated) {
+    const redirectTarget =
+      logoutReason === 'logout' ? '/login' : '/login?session_expired=1';
+
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Navigate to="/login?session_expired=1" replace />} />
+        <Route path="*" element={<Navigate to={redirectTarget} replace />} />
       </Routes>
     );
   }
@@ -36,27 +42,43 @@ const AppRoutes = () => {
   }
 
   return (
-    <div className="kaira-surface dashboard-font relative min-h-screen font-body text-white">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-8 right-8 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-      <Sidebar />
-      <div className="relative pl-64">
-        <main className="mx-auto w-full max-w-[1400px] space-y-6 px-4 py-6 lg:px-8">
-          <Routes>
-            <Route path="/" element={<Overview />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/billing-history" element={<BillingHistory />} />
-            <Route path="/settings/my-account" element={<MyAccount />} />
-            <Route path="/settings/integrations" element={<Integrations />} />
-            <Route path="/settings/kaira" element={<Kaira />} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
-            <Route path="/signup" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+    <>
+      <div className="kaira-surface dashboard-font relative min-h-screen font-body text-white">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-8 right-8 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+        <Sidebar />
+        <div className="relative pl-64">
+          <main className="mx-auto w-full max-w-[1400px] space-y-6 px-4 py-6 lg:px-8">
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/bookings" element={<Bookings />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/billing-history" element={<BillingHistory />} />
+              <Route path="/settings/my-account" element={<MyAccount />} />
+              <Route path="/settings/integrations" element={<Integrations />} />
+              <Route path="/settings/kaira" element={<Kaira />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/signup" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+
+      {auth?.requires_ai_setup ? (
+        <AiConfigModal
+          open
+          onClose={() => login({ ...auth, requires_ai_setup: false })}
+          initialValues={{
+            tone: '',
+            business_context: '',
+            instructions: ''
+          }}
+          onToast={() => {}}
+          onComplete={() => login({ ...auth, requires_ai_setup: false, onboarding_step: 3 })}
+        />
+      ) : null}
+    </>
   );
 };
 

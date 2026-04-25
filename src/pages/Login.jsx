@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiPost } from '../services/apiClient.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { sanitizeEmail, sanitizeText } from '../utils/inputSanitizers.js';
 import { saveOnboardingData } from '../utils/onboardingStorage.js';
 import kairaosLogo from '../assets/KOS.png';
@@ -13,6 +14,7 @@ const createInitialForm = () => ({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
   const [formValues, setFormValues] = useState(createInitialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [apiError, setApiError] = useState('');
@@ -70,8 +72,7 @@ const Login = () => {
 
     try {
       const loginResponse = await apiPost('/auth/login', { email, password });
-      localStorage.clear();
-      localStorage.setItem('auth', JSON.stringify(loginResponse));
+      login(loginResponse);
       navigate('/', { replace: true });
     } catch (error) {
       const onboardingIncomplete =

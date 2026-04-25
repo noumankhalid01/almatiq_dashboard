@@ -3,7 +3,7 @@ import AiConfigModal from '../components/AiConfigModal.jsx';
 import FloatingMessage from '../components/FloatingMessage.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { apiGet } from '../services/apiClient.js';
-import { parseAuth, saveAuth } from '../utils/tokenUtils.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const KAIRA_COPY =
   "The more Kaira knows about your business, the more it sounds like you. Share your story to give Kaira context, and use special instructions to define exactly what Kaira should and shouldn't do - your rules, your way";
@@ -15,8 +15,9 @@ const kairaConfigCache = new Map();
 const kairaConfigRequested = new Map();
 
 const Kaira = () => {
+  const { auth, login } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [authKey] = useState(() => String(parseAuth()?.id || parseAuth()?.tenant_id || parseAuth()?.email || 'default'));
+  const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
   const [kairaConfig, setKairaConfig] = useState({
     tone: '',
     business_context: '',
@@ -26,7 +27,7 @@ const Kaira = () => {
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [flashError, setFlashError] = useState('');
   const [loadingConfig, setLoadingConfig] = useState(false);
-  const [onboardingStep] = useState(() => Number(parseAuth()?.onboarding_step || 0));
+  const onboardingStep = Number(auth?.onboarding_step || 0);
 
   useEffect(() => {
     if (onboardingStep <= 2) return;
@@ -153,9 +154,8 @@ const Kaira = () => {
           kairaConfigCache.set(authKey, payload);
           kairaConfigRequested.set(authKey, true);
 
-          const nextAuth = parseAuth();
-          if (nextAuth) {
-            saveAuth({ ...nextAuth, onboarding_step: 3 });
+          if (auth) {
+            login({ ...auth, onboarding_step: 3 });
           }
 
           setIsModalOpen(false);

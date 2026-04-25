@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import FloatingMessage from '../components/FloatingMessage.jsx';
 import { apiPatch } from '../services/apiClient.js';
-import { parseAuth } from '../utils/tokenUtils.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { toTitleCase } from '../utils/formatters.js';
 import { sanitizeEmail, sanitizePhone, sanitizeText, toTitleCaseLive } from '../utils/inputSanitizers.js';
 
@@ -14,7 +14,7 @@ const normalizePhoneNumber = (value) => {
 };
 
 const MyAccount = () => {
-  const auth = parseAuth() || {};
+  const { auth, login } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const businessNameInputRef = useRef(null);
   const [profileSaveError, setProfileSaveError] = useState('');
@@ -103,7 +103,7 @@ const MyAccount = () => {
         address: updatedTenant.address ?? payload.address
       };
 
-      localStorage.setItem('auth', JSON.stringify(nextAuth));
+      login(nextAuth);
       setProfileDraft({
         business_name: nextAuth.business_name || '',
         industry: nextAuth.industry || '',
@@ -232,7 +232,7 @@ const MyAccount = () => {
                 disabled={savingProfile}
                 className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {savingProfile ? 'Saving...' : 'Add'}
+                {savingProfile ? 'Saving...' : 'Update'}
               </button>
               <button
                 type="button"

@@ -1,40 +1,26 @@
 import { FRIENDLY_API_ERROR_MESSAGE, getFriendlyErrorMessage } from './errorMessages.js';
+import { clearStoredAuth, getAuthSnapshot, setAuthSnapshot, writeStoredAuth } from '../context/AuthContext.jsx';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 const isInvalidTokenDetail = (payload) =>
   typeof payload?.detail === 'string' && payload.detail.toLowerCase() === 'invalid token';
 const IS_NGROK_BASE_URL = /ngrok/i.test(API_BASE_URL);
 
-export const parseAuth = () => {
-  try {
-    const raw = localStorage.getItem('auth');
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-};
-
 export const toBooleanFlag = (value) =>
   value === true || value === 'true' || value === 1 || value === '1';
 
-export const saveAuth = (nextAuth) => {
-  if (!nextAuth) return;
-  localStorage.setItem('auth', JSON.stringify(nextAuth));
-};
-
 export const getAccessToken = () => {
-  const auth = parseAuth();
+  const auth = getAuthSnapshot();
   return auth?.jwt_token?.access_token || auth?.access_token || auth?.token || auth?.jwt || '';
 };
 
 export const getRefreshToken = () => {
-  const auth = parseAuth();
+  const auth = getAuthSnapshot();
   return auth?.jwt_token?.refresh_token || '';
 };
 
 export const setAccessToken = (accessToken) => {
-  const auth = parseAuth();
+  const auth = getAuthSnapshot();
   if (!auth) return;
 
   const nextAuth = {
@@ -45,7 +31,8 @@ export const setAccessToken = (accessToken) => {
     }
   };
 
-  saveAuth(nextAuth);
+  setAuthSnapshot(nextAuth);
+  writeStoredAuth(nextAuth);
 };
 
 export const refreshAccessToken = async () => {
@@ -76,8 +63,7 @@ export const refreshAccessToken = async () => {
   }
 
   if (response.status === 401 && isInvalidTokenDetail(payload)) {
-    localStorage.clear();
-    sessionStorage.clear();
+    clearStoredAuth();
     if (typeof window !== 'undefined') {
       window.location.assign('/login?session_expired=1');
     }

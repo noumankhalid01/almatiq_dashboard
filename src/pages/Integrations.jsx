@@ -6,7 +6,8 @@ import instagramLogo from '../assets/instagram_logo.png';
 import squareLogo from '../assets/square_logo.png';
 import twilioLogo from '../assets/twilio_logo.png';
 import { apiGet, apiPatch, apiPost } from '../services/apiClient.js';
-import { parseAuth, saveAuth, toBooleanFlag } from '../utils/tokenUtils.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { toBooleanFlag } from '../utils/tokenUtils.js';
 
 const emptyAction = (label) => () => {
   void label;
@@ -204,7 +205,7 @@ const instagramConfigRequested = new Map();
 
 const Integrations = () => {
   const location = useLocation();
-  const [auth, setAuth] = useState(() => parseAuth() || {});
+  const { auth, login } = useAuth();
   const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
   const showSquareSection = currentPlanId !== 1;
@@ -278,7 +279,7 @@ const Integrations = () => {
     const loadTwilioCreds = async () => {
       try {
         const response = await apiGet('/integrations/twilio/creds', { auth: true });
-        const currentAuth = parseAuth() || {};
+        const currentAuth = auth || {};
         const nextAuth = {
           ...currentAuth,
           ...(response && typeof response === 'object' ? response : {}),
@@ -288,8 +289,7 @@ const Integrations = () => {
               : true
         };
 
-        saveAuth(nextAuth);
-        setAuth(nextAuth);
+        login(nextAuth);
         const nextTwilioCredentials = {
           sid: nextAuth.twilio_sid || response?.account_sid || '',
           token: nextAuth.twilio_auth_token || response?.auth_token || ''
@@ -317,14 +317,13 @@ const Integrations = () => {
 
     try {
       const response = await apiPatch('/integrations/ig/disconnect', null, { auth: true });
-      const currentAuth = parseAuth() || {};
+      const currentAuth = auth || {};
       const nextAuth = {
         ...currentAuth,
         ...(response && typeof response === 'object' ? response : {}),
         instagram_status: false
       };
-      saveAuth(nextAuth);
-      setAuth(nextAuth);
+      login(nextAuth);
       setFlashMessage({
         type: 'success',
         message: 'Instagram disconnected successfully.'
@@ -352,7 +351,7 @@ const Integrations = () => {
         { auth: true }
       );
 
-      const currentAuth = parseAuth() || {};
+      const currentAuth = auth || {};
       const nextAuth = {
         ...currentAuth,
         ...(response && typeof response === 'object' ? response : {}),
@@ -361,8 +360,7 @@ const Integrations = () => {
         twilio_auth_token: ''
       };
 
-      saveAuth(nextAuth);
-      setAuth(nextAuth);
+      login(nextAuth);
       setTwilioCredentials({ sid: '', token: '' });
       twilioCredentialsCache.delete(authKey);
       twilioCredentialsRequested.delete(authKey);
@@ -424,7 +422,7 @@ const Integrations = () => {
         { auth: true }
       );
 
-      const currentAuth = parseAuth() || {};
+      const currentAuth = auth || {};
       const nextAuth = {
         ...currentAuth,
         ...(response && typeof response === 'object' ? response : {}),
@@ -436,8 +434,7 @@ const Integrations = () => {
             : true
       };
 
-      saveAuth(nextAuth);
-      setAuth(nextAuth);
+      login(nextAuth);
       setTwilioCredentials({
         sid: nextAuth.twilio_sid || twilioForm.twilioSid.trim(),
         token: nextAuth.twilio_auth_token || twilioForm.twilioAuthToken.trim()
@@ -480,22 +477,21 @@ const Integrations = () => {
           { auth: true }
         );
 
-        const currentAuth = parseAuth() || {};
-      const nextAuth = {
-        ...currentAuth,
-        ...(response && typeof response === 'object' ? response : {}),
-        instagram_status:
-          typeof response?.instagram_status === 'boolean'
-            ? response.instagram_status
-            : true
-      };
+        const currentAuth = auth || {};
+        const nextAuth = {
+          ...currentAuth,
+          ...(response && typeof response === 'object' ? response : {}),
+          instagram_status:
+            typeof response?.instagram_status === 'boolean'
+              ? response.instagram_status
+              : true
+        };
 
-      saveAuth(nextAuth);
-      setAuth(nextAuth);
-      instagramConfigRequested.set(authKey, true);
-      setFlashMessage({
-        type: 'success',
-        message: 'Instagram connected successfully.'
+        login(nextAuth);
+        instagramConfigRequested.set(authKey, true);
+        setFlashMessage({
+          type: 'success',
+          message: 'Instagram connected successfully.'
         });
 
         const cleanedUrl = new URL(window.location.href);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import kosLogo from '../assets/KOS.png';
-import { parseAuth, toBooleanFlag } from '../utils/tokenUtils.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { toBooleanFlag } from '../utils/tokenUtils.js';
 
 const navItems = [
   {
@@ -56,7 +57,7 @@ const Sidebar = () => {
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isSettingsRoute = location.pathname.startsWith('/settings');
-  const auth = parseAuth() || {};
+  const { auth, logout } = useAuth();
   const onboardingStep = Number(auth?.onboarding_step || 0);
   const showKairaPendingDot = onboardingStep < 3;
   const showSquareSetup = Number(auth?.current_plan?.plan_id || 0) !== 1;
@@ -73,8 +74,7 @@ const Sidebar = () => {
   }, [isSettingsRoute]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
+    logout();
     navigate('/login', { replace: true });
   };
 
