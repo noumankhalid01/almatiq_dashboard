@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import kosLogo from '../assets/KOS.png';
-import { parseAuth } from '../utils/tokenUtils.js';
+import { parseAuth, toBooleanFlag } from '../utils/tokenUtils.js';
 
 const navItems = [
   {
@@ -61,7 +61,9 @@ const Sidebar = () => {
   const showKairaPendingDot = onboardingStep < 3;
   const showSquareSetup = Number(auth?.current_plan?.plan_id || 0) !== 1;
   const showIntegrationsSetup = Boolean(
-    !auth?.twilio_status || !auth?.instagram_status || (showSquareSetup && !auth?.square_status)
+    !toBooleanFlag(auth?.twilio_status) ||
+      !toBooleanFlag(auth?.instagram_status) ||
+      (showSquareSetup && !toBooleanFlag(auth?.square_status))
   );
 
   useEffect(() => {

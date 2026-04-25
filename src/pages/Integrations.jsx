@@ -5,8 +5,8 @@ import PageHeader from '../components/PageHeader.jsx';
 import instagramLogo from '../assets/instagram_logo.png';
 import squareLogo from '../assets/square_logo.png';
 import twilioLogo from '../assets/twilio_logo.png';
-import { apiPatch, apiPost } from '../services/apiClient.js';
-import { parseAuth, saveAuth } from '../utils/tokenUtils.js';
+import { apiGet, apiPatch, apiPost } from '../services/apiClient.js';
+import { parseAuth, saveAuth, toBooleanFlag } from '../utils/tokenUtils.js';
 
 const emptyAction = (label) => () => {
   void label;
@@ -89,37 +89,202 @@ const ConfirmModal = ({
   );
 };
 
+const TwilioCredentialsModal = ({
+  open,
+  values,
+  errors,
+  loading,
+  tokenVisible,
+  onChange,
+  onToggleTokenVisible,
+  onConfirm,
+  onCancel
+}) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#101010] p-6 shadow-2xl sm:p-8">
+        <div className="mb-2 flex justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/[0.03] text-gray-300 transition hover:border-white/30 hover:bg-white/[0.07] hover:text-white"
+            aria-label="Close"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M5 5l10 10M15 5 5 15" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="text-center">
+          <h3 className="text-xl font-semibold text-white">Connect Twilio</h3>
+        </div>
+
+        <div className="mt-8 space-y-4">
+          <label className="block space-y-2 text-left">
+            <span className="text-sm font-medium text-white">
+              Twilio SID <span className="text-red-400">*</span>
+            </span>
+            <input
+              type="text"
+              value={values.twilioSid}
+              onChange={(event) => onChange('twilioSid', event.target.value)}
+              className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
+              placeholder="Enter Twilio SID"
+            />
+            {errors.twilioSid ? <p className="text-sm text-red-400">{errors.twilioSid}</p> : null}
+          </label>
+
+          <label className="block space-y-2 text-left">
+            <span className="text-sm font-medium text-white">
+              Twilio Auth Token <span className="text-red-400">*</span>
+            </span>
+            <div className="flex h-11 items-center rounded-md border border-white/10 bg-white/[0.03] px-3 focus-within:border-white/25">
+              <input
+                type={tokenVisible ? 'text' : 'password'}
+                value={values.twilioAuthToken}
+                onChange={(event) => onChange('twilioAuthToken', event.target.value)}
+                className="h-full w-full bg-transparent text-white placeholder:text-gray-500 focus:outline-none"
+                placeholder="Enter Twilio Auth Token"
+              />
+              <button
+                type="button"
+                onClick={onToggleTokenVisible}
+                className="text-xs font-medium text-gray-300 transition hover:text-white"
+              >
+                {tokenVisible ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.twilioAuthToken ? <p className="text-sm text-red-400">{errors.twilioAuthToken}</p> : null}
+          </label>
+        </div>
+
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Working...' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SecretField = ({ label, value, placeholder, visible, onToggleVisible }) => (
+  <label className="block space-y-2">
+    <span className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400">{label}</span>
+    <div className="relative">
+      <input
+        type={visible ? 'text' : 'password'}
+        readOnly
+        value={value}
+        className="h-11 w-full rounded-md border border-white/15 bg-white/[0.06] px-3 pr-14 text-base font-normal text-white placeholder:text-gray-500 focus:outline-none read-only:cursor-not-allowed"
+        placeholder={placeholder}
+      />
+      <button
+        type="button"
+        onClick={onToggleVisible}
+        className="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-xs font-medium text-gray-300 transition hover:text-white"
+      >
+        {visible ? 'Hide' : 'Show'}
+      </button>
+    </div>
+  </label>
+);
+
 const Integrations = () => {
   const location = useLocation();
-  const auth = parseAuth() || {};
+  const [auth, setAuth] = useState(() => parseAuth() || {});
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
   const showSquareSection = currentPlanId !== 1;
   const instagramLoginUrl = import.meta.env.VITE_INSTAGRAM_LOGIN_URL || '';
   const instagramState = String(auth?.id || auth?.tenant_id || '');
-  const twilioSidRef = useRef(null);
   const handledInstagramCodeRef = useRef('');
-  const [isEditingTwilio, setIsEditingTwilio] = useState(false);
-  const [showTwilioSecrets, setShowTwilioSecrets] = useState(false);
+  const hasLoadedTwilioCredsRef = useRef(false);
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [isExchangingInstagramCode, setIsExchangingInstagramCode] = useState(false);
   const [showDisconnectInstagramModal, setShowDisconnectInstagramModal] = useState(false);
   const [isDisconnectingInstagram, setIsDisconnectingInstagram] = useState(false);
-  const twilioConnected = Boolean(auth.twilio_status);
-  const instagramConnected = Boolean(auth.instagram_status);
-  const squareConnected = Boolean(auth.square_status);
-
-  const twilioInputClass = [
-    'h-11 w-full rounded-md px-3 text-base font-normal text-white placeholder:text-gray-500 focus:outline-none read-only:cursor-not-allowed',
-    isEditingTwilio
-      ? 'border border-emerald-300/45 bg-emerald-400/10 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/35'
-      : 'border border-white/15 bg-white/[0.06] focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/30'
-  ].join(' ');
+  const [showDisconnectTwilioModal, setShowDisconnectTwilioModal] = useState(false);
+  const [isDisconnectingTwilio, setIsDisconnectingTwilio] = useState(false);
+  const [showTwilioModal, setShowTwilioModal] = useState(false);
+  const [isSavingTwilio, setIsSavingTwilio] = useState(false);
+  const [showTwilioToken, setShowTwilioToken] = useState(false);
+  const [showTwilioModalToken, setShowTwilioModalToken] = useState(false);
+  const [twilioCredentials, setTwilioCredentials] = useState({ sid: '', token: '' });
+  const [twilioForm, setTwilioForm] = useState({
+    twilioSid: auth?.twilio_sid || '',
+    twilioAuthToken: auth?.twilio_auth_token || ''
+  });
+  const [twilioFormErrors, setTwilioFormErrors] = useState({
+    twilioSid: '',
+    twilioAuthToken: ''
+  });
+  const twilioConnected = toBooleanFlag(auth.twilio_status);
+  const instagramConnected = toBooleanFlag(auth.instagram_status);
+  const squareConnected = toBooleanFlag(auth.square_status);
 
   useEffect(() => {
-    if (isEditingTwilio && twilioSidRef.current) {
-      twilioSidRef.current.focus();
+    if (!twilioConnected) {
+      hasLoadedTwilioCredsRef.current = false;
+      setTwilioCredentials({ sid: '', token: '' });
+      setTwilioForm({ twilioSid: '', twilioAuthToken: '' });
+      setShowTwilioToken(false);
+      setShowTwilioModalToken(false);
+      return;
     }
-  }, [isEditingTwilio]);
+
+    setTwilioForm({
+      twilioSid: twilioCredentials.sid || '',
+      twilioAuthToken: twilioCredentials.token || ''
+    });
+  }, [twilioConnected, twilioCredentials.sid, twilioCredentials.token]);
+
+  useEffect(() => {
+    if (!twilioConnected || hasLoadedTwilioCredsRef.current) return;
+
+    hasLoadedTwilioCredsRef.current = true;
+
+    const loadTwilioCreds = async () => {
+      try {
+        const response = await apiGet('/integrations/twilio/creds', { auth: true });
+        const currentAuth = parseAuth() || {};
+        const nextAuth = {
+          ...currentAuth,
+          ...(response && typeof response === 'object' ? response : {}),
+          twilio_status:
+            typeof response?.twilio_status === 'boolean'
+              ? response.twilio_status
+              : true
+        };
+
+        saveAuth(nextAuth);
+        setAuth(nextAuth);
+        const nextTwilioCredentials = {
+          sid: nextAuth.twilio_sid || response?.account_sid || '',
+          token: nextAuth.twilio_auth_token || response?.auth_token || ''
+        };
+        setTwilioCredentials(nextTwilioCredentials);
+        setTwilioForm({
+          twilioSid: nextTwilioCredentials.sid,
+          twilioAuthToken: nextTwilioCredentials.token
+        });
+      } catch (error) {
+        setFlashMessage({
+          type: 'error',
+          message: error.message || 'Unable to load Twilio credentials right now.'
+        });
+      }
+    };
+
+    loadTwilioCreds();
+  }, [twilioConnected]);
 
   const handleConfirmDisconnectInstagram = async () => {
     setIsDisconnectingInstagram(true);
@@ -146,6 +311,121 @@ const Integrations = () => {
       setShowDisconnectInstagramModal(false);
     } finally {
       setIsDisconnectingInstagram(false);
+    }
+  };
+
+  const handleConfirmDisconnectTwilio = async () => {
+    setIsDisconnectingTwilio(true);
+    setFlashMessage({ message: '', type: 'error' });
+
+    try {
+      const response = await apiPatch(
+        '/integrations/twilio/disconnect',
+        null,
+        { auth: true }
+      );
+
+      const currentAuth = parseAuth() || {};
+      const nextAuth = {
+        ...currentAuth,
+        ...(response && typeof response === 'object' ? response : {}),
+        twilio_status: false,
+        twilio_sid: '',
+        twilio_auth_token: ''
+      };
+
+      saveAuth(nextAuth);
+      setAuth(nextAuth);
+      setTwilioCredentials({ sid: '', token: '' });
+      setShowTwilioToken(false);
+      setShowTwilioModalToken(false);
+      setShowDisconnectTwilioModal(false);
+      setFlashMessage({
+        type: 'success',
+        message: 'Twilio disconnected successfully.'
+      });
+    } catch (error) {
+      setShowDisconnectTwilioModal(false);
+      setFlashMessage({
+        type: 'error',
+        message: error.message || 'Unable to disconnect Twilio right now.'
+      });
+    } finally {
+      setIsDisconnectingTwilio(false);
+    }
+  };
+
+  const handleOpenTwilioModal = () => {
+    const nextCredentials = twilioConnected ? twilioCredentials : { sid: '', token: '' };
+    setTwilioForm({
+      twilioSid: nextCredentials.sid || '',
+      twilioAuthToken: nextCredentials.token || ''
+    });
+    setTwilioFormErrors({ twilioSid: '', twilioAuthToken: '' });
+    setShowTwilioModalToken(false);
+    setShowTwilioModal(true);
+  };
+
+  const handleChangeTwilioForm = (field, value) => {
+    setTwilioForm((prev) => ({ ...prev, [field]: value }));
+    setTwilioFormErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  const handleConfirmTwilio = async () => {
+    const nextErrors = {
+      twilioSid: twilioForm.twilioSid.trim() ? '' : 'Twilio SID is required.',
+      twilioAuthToken: twilioForm.twilioAuthToken.trim() ? '' : 'Twilio Auth Token is required.'
+    };
+    setTwilioFormErrors(nextErrors);
+
+    if (nextErrors.twilioSid || nextErrors.twilioAuthToken) {
+      return;
+    }
+
+    setIsSavingTwilio(true);
+    setFlashMessage({ message: '', type: 'error' });
+
+    try {
+      const response = await apiPost(
+        '/integrations/twilio/connect',
+        {
+          account_sid: twilioForm.twilioSid.trim(),
+          auth_token: twilioForm.twilioAuthToken.trim()
+        },
+        { auth: true }
+      );
+
+      const currentAuth = parseAuth() || {};
+      const nextAuth = {
+        ...currentAuth,
+        ...(response && typeof response === 'object' ? response : {}),
+        twilio_sid: twilioForm.twilioSid.trim(),
+        twilio_auth_token: twilioForm.twilioAuthToken.trim(),
+        twilio_status:
+          typeof response?.twilio_status === 'boolean'
+            ? response.twilio_status
+            : true
+      };
+
+      saveAuth(nextAuth);
+      setAuth(nextAuth);
+      setTwilioCredentials({
+        sid: nextAuth.twilio_sid || twilioForm.twilioSid.trim(),
+        token: nextAuth.twilio_auth_token || twilioForm.twilioAuthToken.trim()
+      });
+      setShowTwilioModalToken(false);
+      setShowTwilioModal(false);
+      setFlashMessage({
+        type: 'success',
+        message: 'Twilio connected successfully.'
+      });
+    } catch (error) {
+      setFlashMessage({
+        type: 'error',
+        message: error.message || 'Unable to save Twilio credentials right now.'
+      });
+    } finally {
+      setIsSavingTwilio(false);
     }
   };
 
@@ -234,6 +514,27 @@ const Integrations = () => {
         onCancel={() => setShowDisconnectInstagramModal(false)}
         onConfirm={handleConfirmDisconnectInstagram}
       />
+      <ConfirmModal
+        open={showDisconnectTwilioModal}
+        title="Disconnect Twilio?"
+        message="Once disconnected, Kaira will no longer be able to manage WhatsApp, SMS and phone calls through Twilio. You can reconnect anytime from the Integrations page."
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        confirmDisabled={isDisconnectingTwilio}
+        onCancel={() => setShowDisconnectTwilioModal(false)}
+        onConfirm={handleConfirmDisconnectTwilio}
+      />
+      <TwilioCredentialsModal
+        open={showTwilioModal}
+        values={twilioForm}
+        errors={twilioFormErrors}
+        loading={isSavingTwilio}
+        tokenVisible={showTwilioModalToken}
+        onChange={handleChangeTwilioForm}
+        onToggleTokenVisible={() => setShowTwilioModalToken((prev) => !prev)}
+        onCancel={() => setShowTwilioModal(false)}
+        onConfirm={handleConfirmTwilio}
+      />
 
       <section className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
         <div className="space-y-2 pb-4">
@@ -242,7 +543,7 @@ const Integrations = () => {
             <StatusChip connected={twilioConnected} />
           </div>
           <p className="text-sm text-gray-400">
-            Keep your messaging credentials ready for SMS and call-based automations.
+            Connect Twilio so Kaira can manage WhatsApp, SMS and phone calls.
           </p>
           <div className="-mt-2 border-t border-white/10" />
           <div className="pt-4">
@@ -265,69 +566,41 @@ const Integrations = () => {
           <label className="block space-y-2">
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400">Twilio SID</span>
             <input
-              ref={twilioSidRef}
-              type={showTwilioSecrets ? 'text' : 'password'}
-              readOnly={!isEditingTwilio}
-              className={twilioInputClass}
+              type="text"
+              readOnly
+              value={twilioConnected ? twilioCredentials.sid || '' : ''}
+              className="h-11 w-full rounded-md border border-white/15 bg-white/[0.06] px-3 text-base font-normal text-white placeholder:text-gray-500 focus:outline-none read-only:cursor-not-allowed"
               placeholder="Enter Twilio SID"
             />
           </label>
-          <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400">
-              Twilio Auth Token
-            </span>
-            <input
-              type={showTwilioSecrets ? 'text' : 'password'}
-              readOnly={!isEditingTwilio}
-              className={twilioInputClass}
-              placeholder="Enter Twilio Auth Token"
-            />
-          </label>
+          <SecretField
+            label="Twilio Auth Token"
+            value={twilioConnected ? twilioCredentials.token || '' : ''}
+            placeholder="Enter Twilio Auth Token"
+            visible={showTwilioToken}
+            onToggleVisible={() => setShowTwilioToken((prev) => !prev)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {isEditingTwilio ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditingTwilio(false);
-                  setShowTwilioSecrets(false);
-                }}
-                className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
-              >
-                Add
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditingTwilio(false);
-                  setShowTwilioSecrets(false);
-                }}
-                className="inline-flex h-11 items-center justify-center rounded-md border border-white/20 bg-white/[0.04] px-5 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/[0.08]"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => {
-                setShowTwilioSecrets(true);
-                setIsEditingTwilio(true);
-              }}
+              onClick={handleOpenTwilioModal}
               className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
             >
-              Add Credentials
+              {twilioConnected ? 'Edit Credentials' : 'Connect Twilio'}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowTwilioSecrets((prev) => !prev)}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
-          >
-            {showTwilioSecrets ? 'Hide Credentials' : 'Show Credentials'}
-          </button>
+            {twilioConnected ? (
+              <button
+                type="button"
+                onClick={() => setShowDisconnectTwilioModal(true)}
+                className="inline-flex h-11 items-center justify-center rounded-md bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                Disconnect Twilio
+              </button>
+            ) : null}
+          </div>
         </div>
       </section>
 

@@ -15,6 +15,9 @@ export const parseAuth = () => {
   }
 };
 
+export const toBooleanFlag = (value) =>
+  value === true || value === 'true' || value === 1 || value === '1';
+
 export const saveAuth = (nextAuth) => {
   if (!nextAuth) return;
   localStorage.setItem('auth', JSON.stringify(nextAuth));
