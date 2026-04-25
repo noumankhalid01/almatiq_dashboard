@@ -198,9 +198,14 @@ const SecretField = ({ label, value, placeholder, visible, onToggleVisible }) =>
   </label>
 );
 
+const twilioCredentialsCache = new Map();
+const twilioCredentialsRequested = new Map();
+const instagramConfigRequested = new Map();
+
 const Integrations = () => {
   const location = useLocation();
   const [auth, setAuth] = useState(() => parseAuth() || {});
+  const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
   const showSquareSection = currentPlanId !== 1;
   const instagramLoginUrl = import.meta.env.VITE_INSTAGRAM_LOGIN_URL || '';
@@ -233,6 +238,8 @@ const Integrations = () => {
   useEffect(() => {
     if (!twilioConnected) {
       hasLoadedTwilioCredsRef.current = false;
+      twilioCredentialsRequested.delete(authKey);
+      twilioCredentialsCache.delete(authKey);
       setTwilioCredentials({ sid: '', token: '' });
       setTwilioForm({ twilioSid: '', twilioAuthToken: '' });
       setShowTwilioToken(false);
@@ -240,16 +247,33 @@ const Integrations = () => {
       return;
     }
 
-    setTwilioForm({
-      twilioSid: twilioCredentials.sid || '',
-      twilioAuthToken: twilioCredentials.token || ''
-    });
-  }, [twilioConnected, twilioCredentials.sid, twilioCredentials.token]);
+    const cachedTwilio = twilioCredentialsCache.get(authKey);
+    if (cachedTwilio) {
+      setTwilioCredentials(cachedTwilio);
+      setTwilioForm({
+        twilioSid: cachedTwilio.sid || '',
+        twilioAuthToken: cachedTwilio.token || ''
+      });
+    }
+  }, [authKey, twilioConnected]);
 
   useEffect(() => {
-    if (!twilioConnected || hasLoadedTwilioCredsRef.current) return;
+    if (!twilioConnected) return;
+
+    const cachedTwilio = twilioCredentialsCache.get(authKey);
+    if (cachedTwilio) {
+      setTwilioCredentials(cachedTwilio);
+      setTwilioForm({
+        twilioSid: cachedTwilio.sid || '',
+        twilioAuthToken: cachedTwilio.token || ''
+      });
+      return;
+    }
+
+    if (hasLoadedTwilioCredsRef.current || twilioCredentialsRequested.get(authKey)) return;
 
     hasLoadedTwilioCredsRef.current = true;
+    twilioCredentialsRequested.set(authKey, true);
 
     const loadTwilioCreds = async () => {
       try {
@@ -271,6 +295,7 @@ const Integrations = () => {
           token: nextAuth.twilio_auth_token || response?.auth_token || ''
         };
         setTwilioCredentials(nextTwilioCredentials);
+        twilioCredentialsCache.set(authKey, nextTwilioCredentials);
         setTwilioForm({
           twilioSid: nextTwilioCredentials.sid,
           twilioAuthToken: nextTwilioCredentials.token
@@ -284,7 +309,7 @@ const Integrations = () => {
     };
 
     loadTwilioCreds();
-  }, [twilioConnected]);
+  }, [authKey, twilioConnected]);
 
   const handleConfirmDisconnectInstagram = async () => {
     setIsDisconnectingInstagram(true);
@@ -339,6 +364,8 @@ const Integrations = () => {
       saveAuth(nextAuth);
       setAuth(nextAuth);
       setTwilioCredentials({ sid: '', token: '' });
+      twilioCredentialsCache.delete(authKey);
+      twilioCredentialsRequested.delete(authKey);
       setShowTwilioToken(false);
       setShowTwilioModalToken(false);
       setShowDisconnectTwilioModal(false);
@@ -415,6 +442,11 @@ const Integrations = () => {
         sid: nextAuth.twilio_sid || twilioForm.twilioSid.trim(),
         token: nextAuth.twilio_auth_token || twilioForm.twilioAuthToken.trim()
       });
+      twilioCredentialsCache.set(authKey, {
+        sid: nextAuth.twilio_sid || twilioForm.twilioSid.trim(),
+        token: nextAuth.twilio_auth_token || twilioForm.twilioAuthToken.trim()
+      });
+      twilioCredentialsRequested.set(authKey, true);
       setShowTwilioModalToken(false);
       setShowTwilioModal(false);
       setFlashMessage({
@@ -449,20 +481,21 @@ const Integrations = () => {
         );
 
         const currentAuth = parseAuth() || {};
-        const nextAuth = {
-          ...currentAuth,
-          ...(response && typeof response === 'object' ? response : {}),
-          instagram_status:
-            typeof response?.instagram_status === 'boolean'
-              ? response.instagram_status
-              : true
-        };
+      const nextAuth = {
+        ...currentAuth,
+        ...(response && typeof response === 'object' ? response : {}),
+        instagram_status:
+          typeof response?.instagram_status === 'boolean'
+            ? response.instagram_status
+            : true
+      };
 
-        saveAuth(nextAuth);
-        setAuth(nextAuth);
-        setFlashMessage({
-          type: 'success',
-          message: 'Instagram connected successfully.'
+      saveAuth(nextAuth);
+      setAuth(nextAuth);
+      instagramConfigRequested.set(authKey, true);
+      setFlashMessage({
+        type: 'success',
+        message: 'Instagram connected successfully.'
         });
 
         const cleanedUrl = new URL(window.location.href);

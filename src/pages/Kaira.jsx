@@ -11,8 +11,12 @@ const KAIRA_COPY =
 const hasKairaConfigData = (config) =>
   Boolean(config?.tone || config?.business_context || config?.instructions);
 
+const kairaConfigCache = new Map();
+const kairaConfigRequested = new Map();
+
 const Kaira = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [authKey] = useState(() => String(parseAuth()?.id || parseAuth()?.tenant_id || parseAuth()?.email || 'default'));
   const [kairaConfig, setKairaConfig] = useState({
     tone: '',
     business_context: '',
@@ -26,7 +30,19 @@ const Kaira = () => {
 
   useEffect(() => {
     if (onboardingStep <= 2) return;
-    if (hasKairaConfigData(kairaConfig)) return;
+    const cachedConfig = kairaConfigCache.get(authKey);
+    if (cachedConfig && !hasKairaConfigData(kairaConfig)) {
+      setKairaConfig(cachedConfig);
+      return;
+    }
+
+    if (hasKairaConfigData(kairaConfig)) {
+      kairaConfigCache.set(authKey, kairaConfig);
+      return;
+    }
+
+    if (kairaConfigRequested.get(authKey)) return;
+    kairaConfigRequested.set(authKey, true);
 
     const loadAiConfig = async () => {
       setLoadingConfig(true);
@@ -39,6 +55,7 @@ const Kaira = () => {
           instructions: response?.instructions || ''
         };
         setKairaConfig(nextConfig);
+        kairaConfigCache.set(authKey, nextConfig);
       } catch (err) {
         setError(err?.message || 'Unable to fetch Kaira configuration.');
       } finally {
@@ -47,7 +64,7 @@ const Kaira = () => {
     };
 
     loadAiConfig();
-  }, [kairaConfig, onboardingStep]);
+  }, [authKey, kairaConfig, onboardingStep]);
 
   useEffect(() => {
     if (error) setFlashError(error);
@@ -133,6 +150,8 @@ const Kaira = () => {
         onToast={(nextMessage) => setFlashMessage(nextMessage)}
         onComplete={(payload) => {
           setKairaConfig(payload);
+          kairaConfigCache.set(authKey, payload);
+          kairaConfigRequested.set(authKey, true);
 
           const nextAuth = parseAuth();
           if (nextAuth) {
