@@ -46,6 +46,16 @@ const navItems = [
     )
   },
   {
+    label: 'Add Ons',
+    to: '/add-ons',
+    icon: (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M12 5v14M5 12h14" />
+        <rect x="3" y="3" width="18" height="18" rx="4" />
+      </svg>
+    )
+  },
+  {
     label: 'Billing History',
     to: '/billing-history',
     icon: (

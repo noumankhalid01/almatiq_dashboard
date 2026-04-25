@@ -4,11 +4,10 @@ import PageHeader from '../components/PageHeader.jsx';
 import Table from '../components/Table.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiGet, apiPatch, apiPost } from '../services/apiClient.js';
-import { formatDateTime } from '../utils/formatters.js';
-import { toTitleCase } from '../utils/formatters.js';
+import { formatDateTime, toTitleCase } from '../utils/formatters.js';
 
-const servicesCache = new Map();
-const servicesRequested = new Map();
+const addOnsCache = new Map();
+const addOnsRequested = new Map();
 
 const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
 const formatPercent = (value) => `${Number(value || 0).toFixed(2)}%`;
@@ -25,7 +24,7 @@ const countWords = (value = '') =>
     .split(/\s+/)
     .filter(Boolean).length;
 
-const emptyServiceForm = {
+const emptyAddOnForm = {
   name: '',
   description: '',
   price: '',
@@ -34,19 +33,19 @@ const emptyServiceForm = {
   is_active: 'true'
 };
 
-const normalizeServiceForm = (service) => ({
-  name: service?.name ?? '',
-  description: service?.description ?? '',
-  price: toFixedInputValue(service?.price),
-  discount: toFixedInputValue(service?.discount),
-  duration_mins: service?.duration_mins ?? service?.duration ?? '',
-  is_active: service?.is_active === false ? 'false' : 'true'
+const normalizeAddOnForm = (addOn) => ({
+  name: addOn?.name ?? '',
+  description: addOn?.description ?? '',
+  price: toFixedInputValue(addOn?.price),
+  discount: toFixedInputValue(addOn?.discount),
+  duration_mins: addOn?.duration_mins ?? addOn?.duration ?? '',
+  is_active: addOn?.is_active === false ? 'false' : 'true'
 });
 
-const ServiceModal = ({ open, mode, form, loading, error, onClose, onChange, onSubmit }) => {
+const AddOnModal = ({ open, mode, form, loading, error, onClose, onChange, onSubmit }) => {
   if (!open) return null;
 
-  const title = mode === 'edit' ? 'Edit Service' : 'New Service';
+  const title = mode === 'edit' ? 'Edit Add On' : 'New Add On';
   const actionLabel = mode === 'edit' ? 'Update' : 'Add';
 
   return (
@@ -65,7 +64,7 @@ const ServiceModal = ({ open, mode, form, loading, error, onClose, onChange, onS
         <div className="space-y-1 pr-12">
           <h3 className="text-center font-display text-2xl font-semibold text-white">{title}</h3>
           <p className="text-center text-sm text-gray-400">
-            Enter the service details below. All fields are required except duration.
+            Enter the add-on details below. All fields are required except duration.
           </p>
         </div>
 
@@ -78,7 +77,7 @@ const ServiceModal = ({ open, mode, form, loading, error, onClose, onChange, onS
               value={form.name}
               onChange={(event) => onChange('name', event.target.value)}
               maxLength={20}
-              placeholder="Enter service name"
+              placeholder="Enter add-on name"
               className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
             />
           </label>
@@ -105,13 +104,13 @@ const ServiceModal = ({ open, mode, form, loading, error, onClose, onChange, onS
               value={form.description}
               onChange={(event) => onChange('description', event.target.value)}
               rows={5}
-              placeholder="Enter service description"
+              placeholder="Enter add-on description"
               className="h-[140px] w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
             />
             <p className="text-right text-xs text-gray-400">{countWords(form.description)}/50 words</p>
           </label>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-6 pt-1 md:grid-cols-3">
             <label className="block space-y-2">
               <span className="text-sm font-medium text-white">
                 Price <span className="text-red-400">*</span>
@@ -179,11 +178,11 @@ const ServiceModal = ({ open, mode, form, loading, error, onClose, onChange, onS
   );
 };
 
-const Services = () => {
+const AddOns = () => {
   const { auth } = useAuth();
   const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
-  const cachedEntry = servicesCache.get(authKey);
-  const [services, setServices] = useState(() => cachedEntry?.data || []);
+  const cachedEntry = addOnsCache.get(authKey);
+  const [addOns, setAddOns] = useState(() => cachedEntry?.data || []);
   const [lastUpdated, setLastUpdated] = useState(() => cachedEntry?.updatedAt || null);
   const [loading, setLoading] = useState(() => !cachedEntry);
   const [error, setError] = useState('');
@@ -191,41 +190,41 @@ const Services = () => {
   const [flashSuccess, setFlashSuccess] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [serviceModalOpen, setServiceModalOpen] = useState(false);
-  const [serviceModalMode, setServiceModalMode] = useState('create');
-  const [serviceModalLoading, setServiceModalLoading] = useState(false);
-  const [serviceModalError, setServiceModalError] = useState('');
-  const [serviceForm, setServiceForm] = useState(emptyServiceForm);
-  const [editingService, setEditingService] = useState(null);
+  const [addOnModalOpen, setAddOnModalOpen] = useState(false);
+  const [addOnModalMode, setAddOnModalMode] = useState('create');
+  const [addOnModalLoading, setAddOnModalLoading] = useState(false);
+  const [addOnModalError, setAddOnModalError] = useState('');
+  const [addOnForm, setAddOnForm] = useState(emptyAddOnForm);
+  const [editingAddOn, setEditingAddOn] = useState(null);
 
-  const loadServices = useCallback(
+  const loadAddOns = useCallback(
     async ({ force = false } = {}) => {
       if (!force) {
-        const cachedServices = servicesCache.get(authKey);
-        if (cachedServices) {
-          setServices(cachedServices.data);
-          setLastUpdated(cachedServices.updatedAt);
+        const cachedAddOns = addOnsCache.get(authKey);
+        if (cachedAddOns) {
+          setAddOns(cachedAddOns.data);
+          setLastUpdated(cachedAddOns.updatedAt);
           setLoading(false);
           setError('');
           return;
         }
 
-        if (servicesRequested.get(authKey)) return;
-        servicesRequested.set(authKey, true);
+        if (addOnsRequested.get(authKey)) return;
+        addOnsRequested.set(authKey, true);
       }
 
       setLoading(true);
       setError('');
       try {
-        const response = await apiGet('/services/list', { auth: true });
-        const nextServices = Array.isArray(response) ? response : [];
+        const response = await apiGet('/add_ons/list', { auth: true });
+        const nextAddOns = Array.isArray(response) ? response : [];
         const updatedAt = new Date().toISOString();
-        servicesCache.set(authKey, { data: nextServices, updatedAt });
+        addOnsCache.set(authKey, { data: nextAddOns, updatedAt });
         setLastUpdated(updatedAt);
-        setServices(nextServices);
+        setAddOns(nextAddOns);
       } catch (err) {
-        setServices([]);
-        setError(err?.message || 'Unable to fetch services right now.');
+        setAddOns([]);
+        setError(err?.message || 'Unable to fetch add-ons right now.');
       } finally {
         setLoading(false);
       }
@@ -234,16 +233,16 @@ const Services = () => {
   );
 
   useEffect(() => {
-    loadServices();
-  }, [loadServices]);
+    loadAddOns();
+  }, [loadAddOns]);
 
   useEffect(() => {
     if (error) setFlashError(error);
   }, [error]);
 
   useEffect(() => {
-    if (serviceModalError) setFlashError(serviceModalError);
-  }, [serviceModalError]);
+    if (addOnModalError) setFlashError(addOnModalError);
+  }, [addOnModalError]);
 
   const columns = useMemo(
     () => [
@@ -260,55 +259,55 @@ const Services = () => {
 
   const rows = useMemo(
     () =>
-      services.map((service) => ({
-        ...service,
-        status: service.is_active
+      addOns.map((addOn) => ({
+        ...addOn,
+        status: addOn.is_active
       })),
-    [services]
+    [addOns]
   );
 
-  const filteredServices = useMemo(() => {
+  const filteredAddOns = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const filteredByStatus = rows.filter((service) => {
+    const filteredByStatus = rows.filter((addOn) => {
       if (statusFilter === 'all') return true;
-      return statusFilter === 'active' ? service.is_active : !service.is_active;
+      return statusFilter === 'active' ? addOn.is_active : !addOn.is_active;
     });
 
     if (!normalizedQuery) return filteredByStatus;
 
-    return filteredByStatus.filter((service) =>
-      Object.values(service).some((value) =>
+    return filteredByStatus.filter((addOn) =>
+      Object.values(addOn).some((value) =>
         value ? value.toString().toLowerCase().includes(normalizedQuery) : false
       )
     );
   }, [rows, query, statusFilter]);
 
   const openCreateModal = () => {
-    setServiceModalMode('create');
-    setEditingService(null);
-    setServiceForm(emptyServiceForm);
-    setServiceModalError('');
-    setServiceModalOpen(true);
+    setAddOnModalMode('create');
+    setEditingAddOn(null);
+    setAddOnForm(emptyAddOnForm);
+    setAddOnModalError('');
+    setAddOnModalOpen(true);
   };
 
-  const openEditModal = (service) => {
-    setServiceModalMode('edit');
-    setEditingService(service);
-    setServiceForm(normalizeServiceForm(service));
-    setServiceModalError('');
-    setServiceModalOpen(true);
+  const openEditModal = (addOn) => {
+    setAddOnModalMode('edit');
+    setEditingAddOn(addOn);
+    setAddOnForm(normalizeAddOnForm(addOn));
+    setAddOnModalError('');
+    setAddOnModalOpen(true);
   };
 
-  const updateServiceField = (field, value) => {
-    setServiceForm((prev) => ({ ...prev, [field]: value }));
+  const updateAddOnField = (field, value) => {
+    setAddOnForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const validateServiceForm = () => {
-    const name = serviceForm.name.trim();
-    const description = serviceForm.description.trim();
-    const price = serviceForm.price;
-    const discount = serviceForm.discount;
-    const duration = serviceForm.duration_mins;
+  const validateAddOnForm = () => {
+    const name = addOnForm.name.trim();
+    const description = addOnForm.description.trim();
+    const price = addOnForm.price;
+    const discount = addOnForm.discount;
+    const duration = addOnForm.duration_mins;
 
     if (!name) return 'Name is required.';
     if (name.length > 20) return 'Name cannot be more than 20 characters.';
@@ -322,62 +321,62 @@ const Services = () => {
     return '';
   };
 
-  const submitService = async () => {
-    const validationError = validateServiceForm();
+  const submitAddOn = async () => {
+    const validationError = validateAddOnForm();
     if (validationError) {
-      setServiceModalError(validationError);
+      setAddOnModalError(validationError);
       return;
     }
 
-    setServiceModalError('');
-    setServiceModalLoading(true);
+    setAddOnModalError('');
+    setAddOnModalLoading(true);
 
     const payload = {
-      name: serviceForm.name.trim(),
-      description: serviceForm.description.trim(),
-      price: Number(Number(serviceForm.price || 0).toFixed(2)),
-      discount: Number(Number(serviceForm.discount || 0).toFixed(2)),
+      name: addOnForm.name.trim(),
+      description: addOnForm.description.trim(),
+      price: Number(Number(addOnForm.price || 0).toFixed(2)),
+      discount: Number(Number(addOnForm.discount || 0).toFixed(2)),
       duration_mins:
-        serviceForm.duration_mins === '' || serviceForm.duration_mins === null
+        addOnForm.duration_mins === '' || addOnForm.duration_mins === null
           ? null
-          : Number(serviceForm.duration_mins),
-      is_active: serviceForm.is_active === 'true'
+          : Number(addOnForm.duration_mins),
+      is_active: addOnForm.is_active === 'true'
     };
 
     try {
-      if (serviceModalMode === 'edit') {
-        await apiPatch('/services/update', { ...payload, id: editingService?.id }, { auth: true });
-        setFlashSuccess('Service updated successfully.');
+      if (addOnModalMode === 'edit') {
+        await apiPatch('/add_ons/update', { ...payload, id: editingAddOn?.id }, { auth: true });
+        setFlashSuccess('Add-on updated successfully.');
       } else {
-        await apiPost('/services/create', payload, { auth: true });
-        setFlashSuccess('Service created successfully.');
+        await apiPost('/add_ons/create', payload, { auth: true });
+        setFlashSuccess('Add-on created successfully.');
       }
 
-      setServiceModalOpen(false);
-      setEditingService(null);
-      setServiceForm(emptyServiceForm);
-      await loadServices({ force: true });
+      setAddOnModalOpen(false);
+      setEditingAddOn(null);
+      setAddOnForm(emptyAddOnForm);
+      await loadAddOns({ force: true });
     } catch (err) {
-      setServiceModalOpen(false);
-      setEditingService(null);
-      setServiceForm(emptyServiceForm);
-      setServiceModalError('');
-      setFlashError(err?.message || 'Unable to save service right now.');
+      setAddOnModalOpen(false);
+      setEditingAddOn(null);
+      setAddOnForm(emptyAddOnForm);
+      setAddOnModalError('');
+      setFlashError(err?.message || 'Unable to save add-on right now.');
     } finally {
-      setServiceModalLoading(false);
+      setAddOnModalLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Services"
-        subtitle="Manage your service catalog, pricing, and availability."
+        title="Add Ons"
+        subtitle="Manage your add-on catalog, pricing, and availability."
         actions={
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => loadServices({ force: true })}
+              onClick={() => loadAddOns({ force: true })}
               className="inline-flex h-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
             >
               Refresh
@@ -405,7 +404,7 @@ const Services = () => {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search services"
+            placeholder="Search add-ons"
             className="h-full w-full bg-transparent text-sm text-white placeholder:text-gray-400 focus:outline-none"
           />
         </div>
@@ -435,14 +434,14 @@ const Services = () => {
       <section className="space-y-4">
         <div className="flex items-center justify-between text-xs text-gray-400">
           <span>
-            Showing <span className="font-semibold text-white">{filteredServices.length}</span> services
+            Showing <span className="font-semibold text-white">{filteredAddOns.length}</span> add-ons
           </span>
           {lastUpdated ? <span>Updated {formatDateTime(lastUpdated)}</span> : null}
         </div>
 
         <Table
           columns={columns}
-          rows={filteredServices}
+          rows={filteredAddOns}
           rowKey={(row, index) => row.id || row.service_id || row.name || index}
           tableClassName="table-fixed"
           renderCell={(row, key) => {
@@ -479,26 +478,26 @@ const Services = () => {
             }
             return row[key] || '—';
           }}
-          emptyMessage={loading ? 'Loading services...' : 'No services found.'}
+          emptyMessage={loading ? 'Loading add-ons...' : 'No add-ons found.'}
         />
       </section>
 
-      <ServiceModal
-        open={serviceModalOpen}
-        mode={serviceModalMode}
-        form={serviceForm}
-        loading={serviceModalLoading}
-        error={serviceModalError}
+      <AddOnModal
+        open={addOnModalOpen}
+        mode={addOnModalMode}
+        form={addOnForm}
+        loading={addOnModalLoading}
+        error={addOnModalError}
         onClose={() => {
-          setServiceModalOpen(false);
-          setEditingService(null);
-          setServiceModalError('');
+          setAddOnModalOpen(false);
+          setEditingAddOn(null);
+          setAddOnModalError('');
         }}
-        onChange={updateServiceField}
-        onSubmit={submitService}
+        onChange={updateAddOnField}
+        onSubmit={submitAddOn}
       />
     </div>
   );
 };
 
-export default Services;
+export default AddOns;
