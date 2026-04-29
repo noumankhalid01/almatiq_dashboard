@@ -9,10 +9,6 @@ import { apiGet, apiPatch, apiPost } from '../services/apiClient.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { toBooleanFlag } from '../utils/tokenUtils.js';
 
-const emptyAction = (label) => () => {
-  void label;
-};
-
 const SectionTitle = ({ icon, title }) => (
   <div className="flex items-center gap-3">
     <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white text-white shadow-sm">
@@ -202,7 +198,6 @@ const SecretField = ({ label, value, placeholder, visible, onToggleVisible }) =>
 const twilioCredentialsCache = new Map();
 const twilioCredentialsRequested = new Map();
 const instagramConfigRequested = new Map();
-
 const Integrations = () => {
   const location = useLocation();
   const { auth, login } = useAuth();
@@ -210,15 +205,20 @@ const Integrations = () => {
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
   const showSquareSection = currentPlanId !== 1;
   const instagramLoginUrl = import.meta.env.VITE_INSTAGRAM_LOGIN_URL || '';
+  const squareLoginUrl = import.meta.env.VITE_SQUARE_LOGIN_URL || '';
   const instagramState = String(auth?.id || auth?.tenant_id || '');
   const handledInstagramCodeRef = useRef('');
+  const handledSquareCodeRef = useRef('');
   const hasLoadedTwilioCredsRef = useRef(false);
   const [flashMessage, setFlashMessage] = useState({ message: '', type: 'error' });
   const [isExchangingInstagramCode, setIsExchangingInstagramCode] = useState(false);
+  const [isExchangingSquareCode, setIsExchangingSquareCode] = useState(false);
   const [showDisconnectInstagramModal, setShowDisconnectInstagramModal] = useState(false);
   const [isDisconnectingInstagram, setIsDisconnectingInstagram] = useState(false);
   const [showDisconnectTwilioModal, setShowDisconnectTwilioModal] = useState(false);
   const [isDisconnectingTwilio, setIsDisconnectingTwilio] = useState(false);
+  const [showDisconnectSquareModal, setShowDisconnectSquareModal] = useState(false);
+  const [isDisconnectingSquare, setIsDisconnectingSquare] = useState(false);
   const [showTwilioModal, setShowTwilioModal] = useState(false);
   const [isSavingTwilio, setIsSavingTwilio] = useState(false);
   const [showTwilioToken, setShowTwilioToken] = useState(false);
@@ -235,6 +235,55 @@ const Integrations = () => {
   const twilioConnected = toBooleanFlag(auth.twilio_status);
   const instagramConnected = toBooleanFlag(auth.instagram_status);
   const squareConnected = toBooleanFlag(auth.square_status);
+
+  const handleConnectSquare = () => {
+    setFlashMessage({ message: '', type: 'error' });
+
+    if (!squareLoginUrl) {
+      setFlashMessage({
+        type: 'error',
+        message: 'Square login URL is not configured.'
+      });
+      return;
+    }
+
+    const csrfState = crypto.randomUUID();
+    sessionStorage.setItem('csrf_state_code', csrfState);
+
+    const finalUrl = new URL(squareLoginUrl, window.location.origin);
+    finalUrl.searchParams.set('state', csrfState);
+    window.location.href = finalUrl.toString();
+  };
+
+  const handleConfirmDisconnectSquare = async () => {
+    setIsDisconnectingSquare(true);
+    setFlashMessage({ message: '', type: 'error' });
+
+    try {
+      const response = await apiPatch('/integrations/square/disconnect', null, { auth: true });
+      const currentAuth = auth || {};
+      const nextAuth = {
+        ...currentAuth,
+        ...(response && typeof response === 'object' ? response : {}),
+        square_status: false
+      };
+
+      login(nextAuth);
+      setFlashMessage({
+        type: 'success',
+        message: 'Square disconnected successfully.'
+      });
+      setShowDisconnectSquareModal(false);
+    } catch (error) {
+      setFlashMessage({
+        type: 'error',
+        message: error.message || 'Unable to disconnect Square right now.'
+      });
+      setShowDisconnectSquareModal(false);
+    } finally {
+      setIsDisconnectingSquare(false);
+    }
+  };
 
   useEffect(() => {
     if (!twilioConnected) {
@@ -463,6 +512,8 @@ const Integrations = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const code = params.get('code') || '';
+    const state = params.get('state') || '';
+    if (!code || !state || state !== instagramState) return;
     if (!code || handledInstagramCodeRef.current === code) return;
 
     handledInstagramCodeRef.current = code;
@@ -511,7 +562,79 @@ const Integrations = () => {
     };
 
     exchangeInstagramCode();
-  }, [location.search]);
+  }, [instagramState, location.search]);
+
+  useEffect(() => {
+    if (location.search) {
+      // Debug: inspect the exact Square callback URL in the browser console.
+      console.log('Square callback URL:', `${window.location.pathname}${window.location.search}${window.location.hash}`);
+    }
+
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code') || '';
+    const state = params.get('state') || '';
+    const requestKey = `${code}:${state}`;
+    if (!code || !state || handledSquareCodeRef.current === requestKey) return;
+
+    handledSquareCodeRef.current = requestKey;
+    setFlashMessage({ message: '', type: 'error' });
+
+    const storedState = sessionStorage.getItem('csrf_state_code') || '';
+    sessionStorage.removeItem('csrf_state_code');
+
+    if (!storedState || storedState !== state) {
+      setFlashMessage({
+        type: 'error',
+        message: 'Square security check failed. Please try connecting again.'
+      });
+      const cleanedUrl = new URL(window.location.href);
+      cleanedUrl.searchParams.delete('code');
+      cleanedUrl.searchParams.delete('state');
+      window.history.replaceState({}, '', `${cleanedUrl.pathname}${cleanedUrl.search}${cleanedUrl.hash}`);
+      return;
+    }
+
+    const cleanedUrl = new URL(window.location.href);
+    cleanedUrl.searchParams.delete('code');
+    cleanedUrl.searchParams.delete('state');
+    window.history.replaceState({}, '', `${cleanedUrl.pathname}${cleanedUrl.search}${cleanedUrl.hash}`);
+
+    const exchangeSquareCode = async () => {
+      setIsExchangingSquareCode(true);
+      try {
+        const response = await apiPost(
+          '/integrations/square/connect',
+          { code },
+          { auth: true }
+        );
+
+        const currentAuth = auth || {};
+        const nextAuth = {
+          ...currentAuth,
+          ...(response && typeof response === 'object' ? response : {}),
+          square_status:
+            typeof response?.square_status === 'boolean'
+              ? response.square_status
+              : true
+        };
+
+        login(nextAuth);
+        setFlashMessage({
+          type: 'success',
+          message: 'Square connected successfully.'
+        });
+      } catch (error) {
+        setFlashMessage({
+          type: 'error',
+          message: error.message || 'Unable to connect Square right now.'
+        });
+      } finally {
+        setIsExchangingSquareCode(false);
+      }
+    };
+
+    exchangeSquareCode();
+  }, [auth, login, location.search]);
 
   return (
     <div className="space-y-6">
@@ -521,6 +644,18 @@ const Integrations = () => {
             <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
             <div className="space-y-1">
               <p className="text-base font-semibold text-white">Setting up your Instagram connection...</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isExchangingSquareCode ? (
+        <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/75 px-4 py-4 backdrop-blur-sm sm:items-center">
+          <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#101010] p-6 text-center shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-white">Connecting your Square account...</p>
+              <p className="text-sm text-gray-400">Please wait while we finish the connection.</p>
             </div>
           </div>
         </div>
@@ -555,6 +690,16 @@ const Integrations = () => {
         confirmDisabled={isDisconnectingTwilio}
         onCancel={() => setShowDisconnectTwilioModal(false)}
         onConfirm={handleConfirmDisconnectTwilio}
+      />
+      <ConfirmModal
+        open={showDisconnectSquareModal}
+        title="Disconnect Square?"
+        message="Once disconnected, Kaira will no longer be able to keep your booking and payment workflows aligned through Square. You can reconnect anytime from the Integrations page."
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        confirmDisabled={isDisconnectingSquare}
+        onCancel={() => setShowDisconnectSquareModal(false)}
+        onConfirm={handleConfirmDisconnectSquare}
       />
       <TwilioCredentialsModal
         open={showTwilioModal}
@@ -713,12 +858,23 @@ const Integrations = () => {
           <div className="-mt-2 border-t border-white/10" />
 
           <div className="flex justify-start">
-            <button
-              type="button"
-              onClick={emptyAction('Connect Square')}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-[#16a34a] px-5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
+              <button
+                type="button"
+                onClick={() => {
+                  if (squareConnected) {
+                    setShowDisconnectSquareModal(true);
+                    return;
+                  }
+
+                  handleConnectSquare();
+                }}
+                disabled={isExchangingSquareCode}
+              className={[
+                'inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60',
+                squareConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-[#16a34a] hover:bg-[#15803d]'
+              ].join(' ')}
             >
-              Connect Square
+              {squareConnected ? 'Disconnect Square' : 'Connect Square'}
             </button>
           </div>
         </section>
