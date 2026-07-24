@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import kosLogo from '../assets/KOS.png';
 import { useAuth } from '../context/AuthContext.jsx';
+import { fetchFitnessLeads, getFitnessLeadsCache, subscribeFitnessLeads } from '../services/fitnessLeadsStore.js';
+import { fetchComplaints, getComplaintsCache, subscribeComplaints } from '../services/complaintsStore.js';
 import { toBooleanFlag } from '../utils/tokenUtils.js';
+
+const countPendingLeads = (leads) =>
+  leads.filter((lead) => lead.status?.toLowerCase() === 'pending').length;
+
+const countOpenComplaints = (complaints) =>
+  complaints.filter((complaint) => complaint.status?.toLowerCase() === 'open').length;
 
 const navItems = [
   {
@@ -17,6 +25,7 @@ const navItems = [
   {
     label: 'Bookings',
     to: '/bookings',
+    industries: ['Wellness'],
     icon: (
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M7 3v4M17 3v4M3 9h18M6 13h4M6 17h8" />
@@ -27,6 +36,7 @@ const navItems = [
   {
     label: 'Leads',
     to: '/leads',
+    industries: ['Wellness'],
     icon: (
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M4 6h16M4 12h16M4 18h10" />
@@ -35,8 +45,31 @@ const navItems = [
     )
   },
   {
+    label: 'Leads',
+    to: '/leads-fitness',
+    industries: ['Fitness'],
+    icon: (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M4 6h16M4 12h16M4 18h10" />
+        <circle cx="19" cy="18" r="3" />
+      </svg>
+    )
+  },
+  {
+    label: 'Complaints',
+    to: '/complaints',
+    industries: ['Fitness'],
+    icon: (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M12 9v4M12 17h.01" />
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+      </svg>
+    )
+  },
+  {
     label: 'Services',
     to: '/services',
+    industries: ['Wellness'],
     icon: (
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M10 6h4a2 2 0 0 1 2 2v1h3a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a1 1 0 0 1 1-1h3V8a2 2 0 0 1 2-2Z" />
@@ -48,6 +81,7 @@ const navItems = [
   {
     label: 'Add Ons',
     to: '/add-ons',
+    industries: ['Wellness'],
     icon: (
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M12 5v14M5 12h14" />
@@ -70,7 +104,7 @@ const navItems = [
 const settingsItems = [
   { label: 'My Account', to: '/settings/my-account' },
   { label: 'Integrations', to: '/settings/integrations' },
-  { label: 'Kaira', to: '/settings/kaira' }
+  { label: 'Kaira', to: '/settings/kaira', industries: ['Wellness'] }
 ];
 
 const Sidebar = () => {
@@ -80,12 +114,20 @@ const Sidebar = () => {
   const isSettingsRoute = location.pathname.startsWith('/settings');
   const { auth, logout } = useAuth();
   const onboardingStep = Number(auth?.onboarding_step || 0);
-  const showKairaPendingDot = onboardingStep < 3;
-  const showSquareSetup = Number(auth?.current_plan?.plan_id || 0) !== 1;
+  const isFitness = auth?.industry === 'Fitness';
+  const showKairaPendingDot = auth?.industry === 'Wellness' && onboardingStep < 3;
+  const showSquareSetup = !isFitness && Number(auth?.current_plan?.plan_id || 0) !== 1;
   const showIntegrationsSetup = Boolean(
     !toBooleanFlag(auth?.twilio_status) ||
-      !toBooleanFlag(auth?.instagram_status) ||
+      (!isFitness && !toBooleanFlag(auth?.instagram_status)) ||
       (showSquareSetup && !toBooleanFlag(auth?.square_status))
+  );
+  const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
+  const [pendingLeadsCount, setPendingLeadsCount] = useState(
+    () => countPendingLeads(getFitnessLeadsCache(authKey)?.data || [])
+  );
+  const [openComplaintsCount, setOpenComplaintsCount] = useState(
+    () => countOpenComplaints(getComplaintsCache(authKey)?.data || [])
   );
 
   useEffect(() => {
@@ -93,6 +135,30 @@ const Sidebar = () => {
       setSettingsOpen(true);
     }
   }, [isSettingsRoute]);
+
+  useEffect(() => {
+    if (auth?.industry !== 'Fitness') return undefined;
+
+    fetchFitnessLeads(authKey)
+      .then((result) => setPendingLeadsCount(countPendingLeads(result.data)))
+      .catch(() => {});
+
+    return subscribeFitnessLeads((key, value) => {
+      if (key === authKey) setPendingLeadsCount(countPendingLeads(value.data));
+    });
+  }, [auth?.industry, authKey]);
+
+  useEffect(() => {
+    if (auth?.industry !== 'Fitness') return undefined;
+
+    fetchComplaints(authKey)
+      .then((result) => setOpenComplaintsCount(countOpenComplaints(result.data)))
+      .catch(() => {});
+
+    return subscribeComplaints((key, value) => {
+      if (key === authKey) setOpenComplaintsCount(countOpenComplaints(value.data));
+    });
+  }, [auth?.industry, authKey]);
 
   const handleLogout = () => {
     logout();
@@ -108,22 +174,36 @@ const Sidebar = () => {
         </div>
 
         <nav className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1">
-          {navItems.map((item) => (
+          {navItems
+            .filter((item) => !item.industries || item.industries.includes(auth?.industry))
+            .map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
                 [
-                  'relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition',
+                  'relative flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition',
                   isActive
                     ? "bg-white text-black shadow-soft before:absolute before:inset-0 before:-z-10 before:rounded-xl before:bg-white/20 before:blur-[18px] before:content-['']"
                     : 'text-gray-400 hover:bg-white/10 hover:text-white'
                 ].join(' ')
               }
             >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="flex items-center gap-3">
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </span>
+              {item.to === '/leads-fitness' && pendingLeadsCount > 0 ? (
+                <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+                  {pendingLeadsCount > 99 ? '99+' : pendingLeadsCount}
+                </span>
+              ) : null}
+              {item.to === '/complaints' && openComplaintsCount > 0 ? (
+                <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+                  {openComplaintsCount > 99 ? '99+' : openComplaintsCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
 
@@ -169,7 +249,9 @@ const Sidebar = () => {
 
             {settingsOpen ? (
               <div className="space-y-1 pl-5">
-                {settingsItems.map((item) => (
+                {settingsItems
+                  .filter((item) => !item.industries || item.industries.includes(auth?.industry))
+                  .map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

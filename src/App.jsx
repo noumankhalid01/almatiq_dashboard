@@ -3,6 +3,8 @@ import Sidebar from './components/Sidebar.jsx';
 import Overview from './pages/Overview.jsx';
 import Bookings from './pages/Bookings.jsx';
 import Leads from './pages/Leads.jsx';
+import LeadsFitness from './pages/LeadsFitness.jsx';
+import Complaints from './pages/Complaints.jsx';
 import Services from './pages/Services.jsx';
 import AddOns from './pages/AddOns.jsx';
 import BillingHistory from './pages/BillingHistory.jsx';
@@ -54,7 +56,18 @@ const AppRoutes = () => {
             <Routes>
               <Route path="/" element={<Overview />} />
               <Route path="/bookings" element={<Bookings />} />
-              <Route path="/leads" element={<Leads />} />
+              <Route
+                path="/leads"
+                element={auth?.industry === 'Wellness' ? <Leads /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/leads-fitness"
+                element={auth?.industry === 'Fitness' ? <LeadsFitness /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/complaints"
+                element={auth?.industry === 'Fitness' ? <Complaints /> : <Navigate to="/" replace />}
+              />
               <Route path="/services" element={<Services />} />
               <Route path="/add-ons" element={<AddOns />} />
               <Route path="/billing-history" element={<BillingHistory />} />

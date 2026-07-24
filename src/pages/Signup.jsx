@@ -296,13 +296,21 @@ const Signup = () => {
                     <span className="text-xs font-medium uppercase tracking-[0.12em] text-white">
                       Industry <span className="text-red-400">*</span>
                     </span>
-                    <input
-                      type="text"
+                    <select
                       value={formValues.industry}
-                      onChange={(event) => setFieldValue('industry', toTitleCaseLive(event.target.value))}
-                      className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white placeholder:text-gray-500 focus:border-white/25 focus:outline-none"
-                      placeholder="Wellness"
-                    />
+                      onChange={(event) => setFieldValue('industry', event.target.value)}
+                      className="h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-white focus:border-white/25 focus:outline-none"
+                    >
+                      <option value="" disabled className="bg-black">
+                        Select an industry
+                      </option>
+                      <option value="Fitness" className="bg-black">
+                        Fitness
+                      </option>
+                      <option value="Wellness" className="bg-black">
+                        Wellness
+                      </option>
+                    </select>
                     {fieldErrors.industry ? (
                       <p className="text-xs text-red-400">{fieldErrors.industry}</p>
                     ) : null}

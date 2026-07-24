@@ -93,7 +93,9 @@ const Integrations = () => {
   const { auth, login } = useAuth();
   const authKey = String(auth?.id || auth?.tenant_id || auth?.email || 'default');
   const currentPlanId = Number(auth?.current_plan?.plan_id || 0);
-  const showSquareSection = currentPlanId !== 1;
+  const isFitness = auth?.industry === 'Fitness';
+  const showInstagramSection = !isFitness;
+  const showSquareSection = !isFitness && currentPlanId !== 1;
   const instagramLoginUrl = import.meta.env.VITE_INSTAGRAM_LOGIN_URL || '';
   const squareLoginUrl = import.meta.env.VITE_SQUARE_LOGIN_URL || '';
   const instagramState = String(auth?.id || auth?.tenant_id || '');
@@ -463,67 +465,69 @@ const Integrations = () => {
         </div>
       </section>
 
-      <section className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
-        <div className="space-y-2 pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <SectionTitle
-              title="Instagram"
-              icon={<img src={instagramLogo} alt="" className="h-6 w-6 object-contain" />}
-            />
-            <StatusChip connected={instagramConnected} />
+      {showInstagramSection ? (
+        <section className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
+          <div className="space-y-2 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionTitle
+                title="Instagram"
+                icon={<img src={instagramLogo} alt="" className="h-6 w-6 object-contain" />}
+              />
+              <StatusChip connected={instagramConnected} />
+            </div>
+            <p className="text-sm text-gray-400">
+              Connect Instagram so Kaira can keep your social messaging connected.
+            </p>
           </div>
-          <p className="text-sm text-gray-400">
-            Connect Instagram so Kaira can keep your social messaging connected.
-          </p>
-        </div>
-        <div className="-mt-2 border-t border-white/10" />
-        <div className="pt-4">
-          <p className="text-sm font-medium text-white">
-            Before you connect, make sure your Instagram account meets the following requirements:
-          </p>
-          <ul className="mt-3 space-y-3">
-            <BulletItem>Your Instagram account must be a Professional Account (Business or Creator)</BulletItem>
-          </ul>
-          <p className="mt-3 text-sm italic text-gray-300">
-            Don&apos;t have a Professional account? Go to your Instagram Settings → Account → Switch to Professional
-            Account.
-          </p>
-        </div>
+          <div className="-mt-2 border-t border-white/10" />
+          <div className="pt-4">
+            <p className="text-sm font-medium text-white">
+              Before you connect, make sure your Instagram account meets the following requirements:
+            </p>
+            <ul className="mt-3 space-y-3">
+              <BulletItem>Your Instagram account must be a Professional Account (Business or Creator)</BulletItem>
+            </ul>
+            <p className="mt-3 text-sm italic text-gray-300">
+              Don&apos;t have a Professional account? Go to your Instagram Settings → Account → Switch to Professional
+              Account.
+            </p>
+          </div>
 
-        <div className="flex justify-start">
-          <button
-            type="button"
-            disabled={isExchangingInstagramCode}
-            onClick={() => {
-              if (instagramConnected) {
-                setShowDisconnectInstagramModal(true);
-                return;
-              }
-
-              if (instagramLoginUrl) {
-                const redirectUrl = new URL(instagramLoginUrl, window.location.origin);
-                if (instagramState) {
-                  redirectUrl.searchParams.set('state', instagramState);
+          <div className="flex justify-start">
+            <button
+              type="button"
+              disabled={isExchangingInstagramCode}
+              onClick={() => {
+                if (instagramConnected) {
+                  setShowDisconnectInstagramModal(true);
+                  return;
                 }
-                window.location.href = redirectUrl.toString();
-              } else {
-                setFlashMessage({
-                  type: 'error',
-                  message: 'Instagram login URL is not configured.'
-                });
-              }
-            }}
-            className={[
-              'inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
-              instagramConnected
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-[#16a34a] text-white hover:bg-[#15803d]'
-            ].join(' ')}
-          >
-            {instagramConnected ? 'Disconnect Instagram' : 'Connect Instagram'}
-          </button>
-        </div>
-      </section>
+
+                if (instagramLoginUrl) {
+                  const redirectUrl = new URL(instagramLoginUrl, window.location.origin);
+                  if (instagramState) {
+                    redirectUrl.searchParams.set('state', instagramState);
+                  }
+                  window.location.href = redirectUrl.toString();
+                } else {
+                  setFlashMessage({
+                    type: 'error',
+                    message: 'Instagram login URL is not configured.'
+                  });
+                }
+              }}
+              className={[
+                'inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+                instagramConnected
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-[#16a34a] text-white hover:bg-[#15803d]'
+              ].join(' ')}
+            >
+              {instagramConnected ? 'Disconnect Instagram' : 'Connect Instagram'}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       {showSquareSection ? (
         <section className="space-y-5 rounded-2xl border border-white/10 bg-black/40 p-5 shadow-soft">
