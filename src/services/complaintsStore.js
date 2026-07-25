@@ -24,12 +24,17 @@ export const fetchComplaints = async (key, { force = false } = {}) => {
     if (pending) return pending;
   }
 
-  const request = apiGet('/complaints/data', { auth: true }).then((response) => {
-    const data = Array.isArray(response) ? response : [];
-    const value = { data, lastUpdated: new Date().toISOString() };
-    setComplaintsCache(key, value);
-    return value;
-  });
+  const request = apiGet('/complaints/data', { auth: true })
+    .catch((err) => {
+      if (err?.status === 404) return [];
+      throw err;
+    })
+    .then((response) => {
+      const data = Array.isArray(response) ? response : [];
+      const value = { data, lastUpdated: new Date().toISOString() };
+      setComplaintsCache(key, value);
+      return value;
+    });
 
   inFlight.set(key, request);
   try {
